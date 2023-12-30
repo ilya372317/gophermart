@@ -28,3 +28,6 @@ vendor/
 
 # machinet
 machinet.conf
+
+# log
+log.txt
