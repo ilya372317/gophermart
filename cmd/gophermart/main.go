@@ -15,6 +15,7 @@ func main() {
 	if logErr != nil {
 		log.Fatal("failed init logger")
 	}
+	logger.Log.Info("server is starting...")
 	if err := http.ListenAndServe(":8080", router.New()); err != nil {
 		logger.Log.Fatalf("failed start server: %v", err)
 	}

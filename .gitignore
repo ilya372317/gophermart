@@ -31,3 +31,6 @@ machinet.conf
 
 # log
 log.txt
+
+# env
+docker/.env
