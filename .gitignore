@@ -34,3 +34,4 @@ log.txt
 
 # env
 docker/.env
+.env

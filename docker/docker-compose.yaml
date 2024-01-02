@@ -20,6 +20,8 @@ services:
       - "8080:8080"
     volumes:
       - ../log.txt:/log.txt
+      - ../.env:/.env
+      - ../db:/db
     depends_on:
       - db
 
