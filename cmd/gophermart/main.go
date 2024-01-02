@@ -13,6 +13,7 @@ import (
 
 const logPath = "./log.txt"
 const envPath = "./.env"
+const migrationPath = "db/migrations"
 
 func main() {
 	run()
@@ -36,6 +37,10 @@ func run() {
 	db, err := dbmanager.Open(gophermartConfig.DatabaseDSN)
 	if err != nil {
 		logger.Log.Fatalf("failed open database connection: %v", err)
+		return
+	}
+	if err := dbmanager.RunMigrations(db.DB, migrationPath); err != nil {
+		logger.Log.Fatalf("failed run migrations: %v", err)
 		return
 	}
 

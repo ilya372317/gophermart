@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/ilya372317/gophermart/internal/logger"
 	"github.com/jmoiron/sqlx"
 	"github.com/ory/dockertest/v3"
 
@@ -20,30 +19,30 @@ func Open(databaseDSN string) (*sqlx.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed open database connection: %w", err)
 	}
-	runMigrations(db.DB)
-
 	return db, nil
 }
 
-func runMigrations(db *sql.DB) {
+func RunMigrations(db *sql.DB, migrationPath string) error {
 	driver, err := pgx.WithInstance(db, &pgx.Config{})
 	if err != nil {
-		logger.Log.Fatalf("failed init postgres driver: %v", err)
+		return fmt.Errorf("failed init postgres driver: %w", err)
 	}
-	m, err := migrate.NewWithDatabaseInstance("file://db/migrations",
+	m, err := migrate.NewWithDatabaseInstance("file://"+migrationPath,
 		"metrics", driver)
 	if err != nil {
-		logger.Log.Fatalf("failed get migration instance: %v", err)
+		return fmt.Errorf("failed get migration instance: %w", err)
 	}
 
 	if err = m.Up(); err != nil {
 		if !errors.Is(err, migrate.ErrNoChange) {
-			logger.Log.Fatalf("failed run migrations: %v", err)
+			return fmt.Errorf("failed run migrations: %w", err)
 		}
 	}
+
+	return nil
 }
 
-func MakeTestConnection() (*sqlx.DB, *dockertest.Pool, *dockertest.Resource, error) {
+func MakeTestConnection(migrationPath string) (*sqlx.DB, *dockertest.Pool, *dockertest.Resource, error) {
 	var db *sqlx.DB
 
 	pool, err := dockertest.NewPool("")
@@ -75,6 +74,10 @@ func MakeTestConnection() (*sqlx.DB, *dockertest.Pool, *dockertest.Resource, err
 		return nil
 	}); err != nil {
 		return nil, nil, nil, fmt.Errorf("could not connect to docker: %w", err)
+	}
+
+	if err := RunMigrations(db.DB, migrationPath); err != nil {
+		return nil, nil, nil, fmt.Errorf("failed run migrations on test database: %w", err)
 	}
 
 	return db, pool, resource, nil

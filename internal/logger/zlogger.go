@@ -21,7 +21,10 @@ func Initialize(logPath string) error {
 	} else {
 		zapConfig = zap.NewDevelopmentConfig()
 	}
-	zapConfig.OutputPaths = []string{"stdout", logPath}
+	zapConfig.OutputPaths = []string{"stdout"}
+	if logPath != "" {
+		zapConfig.OutputPaths = append(zapConfig.OutputPaths, logPath)
+	}
 	log, err := zapConfig.Build()
 	if err != nil {
 		return fmt.Errorf("failed build sLogger: %w", err)

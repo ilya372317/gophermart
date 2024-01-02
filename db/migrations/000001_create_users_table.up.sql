@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users(
     id BIGSERIAL PRIMARY KEY NOT NULL,
     login TEXT NOT NULL,
-    password uuid NOT NULL
+    password bytea NOT NULL
 );
