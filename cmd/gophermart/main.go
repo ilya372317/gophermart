@@ -8,6 +8,7 @@ import (
 	"github.com/ilya372317/gophermart/internal/dbmanager"
 	"github.com/ilya372317/gophermart/internal/logger"
 	"github.com/ilya372317/gophermart/internal/router"
+	"github.com/ilya372317/gophermart/internal/storage"
 	"github.com/joho/godotenv"
 )
 
@@ -49,9 +50,8 @@ func run() {
 			logger.Log.Fatalf("failed close db connection: %v", err)
 		}
 	}()
-
 	logger.Log.Infof("server is starting at host: [%s]...", gophermartConfig.Host)
-	if err := http.ListenAndServe(gophermartConfig.Host, router.New()); err != nil {
+	if err := http.ListenAndServe(gophermartConfig.Host, router.New(storage.New(db))); err != nil {
 		logger.Log.Fatalf("failed start server: %v", err)
 		return
 	}

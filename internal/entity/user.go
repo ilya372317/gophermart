@@ -6,9 +6,9 @@ import (
 )
 
 type User struct {
-	Login    string
-	Password string
-	ID       uint
+	Login    string `db:"login"`
+	Password string `db:"password"`
+	ID       uint   `db:"id"`
 }
 
 func (u *User) SetPassword(pass string) {
