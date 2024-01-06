@@ -56,7 +56,6 @@ func Register(repo RegisterStorage, gopherConfig *config.GophermartConfig) http.
 		}
 
 		tokenExp := time.Hour * time.Duration(gopherConfig.ExpTime)
-
 		tokenString, err := registeredUser.GenerateJWTToken(gopherConfig.SecretKey, tokenExp)
 		if err != nil {
 			http.Error(writer, fmt.Errorf("failed signed token: %w", err).Error(), http.StatusInternalServerError)
