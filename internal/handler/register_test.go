@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/entity"
 	handler_mock "github.com/ilya372317/gophermart/internal/handler/mocks"
 	"github.com/stretchr/testify/assert"
@@ -204,7 +205,11 @@ func TestRegister(t *testing.T) {
 			require.NoError(t, err)
 			request := httptest.NewRequest(http.MethodPost, "localhost:8080/register", bytes.NewReader(body))
 			writer := httptest.NewRecorder()
-			handler := Register(repoMock)
+			gopherConfig := config.GophermartConfig{
+				SecretKey: "secret-key",
+				ExpTime:   1,
+			}
+			handler := Register(repoMock, &gopherConfig)
 			handler.ServeHTTP(writer, request)
 
 			res := writer.Result()

@@ -51,7 +51,7 @@ func run() {
 		}
 	}()
 	logger.Log.Infof("server is starting at host: [%s]...", gophermartConfig.Host)
-	if err := http.ListenAndServe(gophermartConfig.Host, router.New(storage.New(db))); err != nil {
+	if err := http.ListenAndServe(gophermartConfig.Host, router.New(storage.New(db), gophermartConfig)); err != nil {
 		logger.Log.Fatalf("failed start server: %v", err)
 		return
 	}

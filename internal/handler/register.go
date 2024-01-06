@@ -6,13 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/dto"
 	"github.com/ilya372317/gophermart/internal/entity"
 	"github.com/ilya372317/gophermart/internal/logger"
 )
 
-const TokenExp = time.Hour * 12
-const SecretKey = "secret-key"
 const failedSendDataErrPattern = "failed send data to client: %v"
 
 type RegisterStorage interface {
@@ -21,7 +20,7 @@ type RegisterStorage interface {
 	GetUserByLogin(ctx context.Context, login string) (*entity.User, error)
 }
 
-func Register(repo RegisterStorage) http.HandlerFunc {
+func Register(repo RegisterStorage, gopherConfig *config.GophermartConfig) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		body, err := dto.NewUserCredentialsFromRequest(request)
 		if err != nil {
@@ -56,7 +55,9 @@ func Register(repo RegisterStorage) http.HandlerFunc {
 			return
 		}
 
-		tokenString, err := registeredUser.GenerateJWTToken(SecretKey, TokenExp)
+		tokenExp := time.Hour * time.Duration(gopherConfig.ExpTime)
+
+		tokenString, err := registeredUser.GenerateJWTToken(gopherConfig.SecretKey, tokenExp)
 		if err != nil {
 			http.Error(writer, fmt.Errorf("failed signed token: %w", err).Error(), http.StatusInternalServerError)
 			return
@@ -65,7 +66,7 @@ func Register(repo RegisterStorage) http.HandlerFunc {
 		http.SetCookie(writer, &http.Cookie{
 			Name:    "AUTH_TOKEN",
 			Value:   tokenString,
-			Expires: time.Now().Add(TokenExp),
+			Expires: time.Now().Add(tokenExp),
 		})
 
 		if _, err = fmt.Fprint(writer, "Welcome my friend. You was successfully registered"); err != nil {
