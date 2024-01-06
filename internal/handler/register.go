@@ -6,16 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/ilya372317/gophermart/internal/dto"
 	"github.com/ilya372317/gophermart/internal/entity"
 	"github.com/ilya372317/gophermart/internal/logger"
 )
-
-type Claims struct {
-	jwt.RegisteredClaims
-	UserID uint
-}
 
 const TokenExp = time.Hour * 12
 const SecretKey = "secret-key"
@@ -62,14 +56,7 @@ func Register(repo RegisterStorage) http.HandlerFunc {
 			return
 		}
 
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
-			RegisteredClaims: jwt.RegisteredClaims{
-				ExpiresAt: jwt.NewNumericDate(time.Now().Add(TokenExp)),
-			},
-			UserID: registeredUser.ID,
-		})
-
-		tokenString, err := token.SignedString([]byte(SecretKey))
+		tokenString, err := registeredUser.GenerateJWTToken(SecretKey, TokenExp)
 		if err != nil {
 			http.Error(writer, fmt.Errorf("failed signed token: %w", err).Error(), http.StatusInternalServerError)
 			return

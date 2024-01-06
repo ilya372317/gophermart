@@ -93,7 +93,7 @@ func TestRegister(t *testing.T) {
 				createdUser: &entity.User{
 					Login:    "test",
 					Password: "123",
-					ID:       0,
+					ID:       1,
 				},
 				saveReturnErr:           false,
 				getUserByLoginReturnErr: false,
