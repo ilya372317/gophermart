@@ -2,13 +2,12 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/ilya372317/gophermart/internal/dto"
 	"github.com/ilya372317/gophermart/internal/entity"
 	"github.com/ilya372317/gophermart/internal/logger"
 )
@@ -22,11 +21,6 @@ const TokenExp = time.Hour * 12
 const SecretKey = "secret-key"
 const failedSendDataErrPattern = "failed send data to client: %v"
 
-type RegisterBody struct {
-	Login    string `json:"login,omitempty" validate:"required,min=3"`
-	Password string `json:"password,omitempty" validate:"required,min=3"`
-}
-
 type RegisterStorage interface {
 	HasUser(ctx context.Context, login string) (bool, error)
 	SaveUser(ctx context.Context, user entity.User) error
@@ -35,17 +29,9 @@ type RegisterStorage interface {
 
 func Register(repo RegisterStorage) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		body := RegisterBody{}
-		err := json.NewDecoder(request.Body).Decode(&body)
+		body, err := dto.NewUserCredentialsFromRequest(request)
 		if err != nil {
-			http.Error(writer, fmt.Errorf("failed decode register body: %w", err).Error(), http.StatusInternalServerError)
-			return
-		}
-
-		validate := validator.New(validator.WithRequiredStructEnabled())
-		err = validate.Struct(&body)
-		if err != nil {
-			http.Error(writer, fmt.Errorf("invalid body given: %w", err).Error(), http.StatusBadRequest)
+			http.Error(writer, err.Error(), http.StatusBadRequest)
 			return
 		}
 
