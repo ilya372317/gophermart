@@ -1,11 +1,9 @@
 package handler
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -25,8 +23,8 @@ const SecretKey = "secret-key"
 const failedSendDataErrPattern = "failed send data to client: %v"
 
 type RegisterBody struct {
-	Login    string `json:"login,omitempty" validate:"required"`
-	Password string `json:"password,omitempty" validate:"required"`
+	Login    string `json:"login,omitempty" validate:"required,min=3"`
+	Password string `json:"password,omitempty" validate:"required,min=3"`
 }
 
 type RegisterStorage interface {
@@ -37,18 +35,8 @@ type RegisterStorage interface {
 
 func Register(repo RegisterStorage) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		bodyContent, err := io.ReadAll(request.Body)
-		if err != nil {
-			http.Error(writer, fmt.Errorf("failed read body for check len: %w", err).Error(), http.StatusInternalServerError)
-			return
-		}
-		if len(bodyContent) == 0 {
-			http.Error(writer, "request should have body", http.StatusBadRequest)
-			return
-		}
-		request.Body = io.NopCloser(bytes.NewReader(bodyContent))
 		body := RegisterBody{}
-		err = json.NewDecoder(request.Body).Decode(&body)
+		err := json.NewDecoder(request.Body).Decode(&body)
 		if err != nil {
 			http.Error(writer, fmt.Errorf("failed decode register body: %w", err).Error(), http.StatusInternalServerError)
 			return
@@ -73,9 +61,9 @@ func Register(repo RegisterStorage) http.HandlerFunc {
 		}
 
 		user := entity.User{
-			Login:    body.Login,
-			Password: body.Password,
+			Login: body.Login,
 		}
+		user.SetPassword(body.Password)
 		saveErr := repo.SaveUser(request.Context(), user)
 		if saveErr != nil {
 			http.Error(writer, fmt.Errorf("failed save user to database: %w", err).Error(), http.StatusInternalServerError)
@@ -111,5 +99,6 @@ func Register(repo RegisterStorage) http.HandlerFunc {
 			logger.Log.Warnf(failedSendDataErrPattern, err)
 			return
 		}
+		writer.WriteHeader(http.StatusOK)
 	}
 }
