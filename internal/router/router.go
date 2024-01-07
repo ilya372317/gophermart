@@ -24,7 +24,7 @@ func New(repo MarketStorage, gopherConfig *config.GophermartConfig) *chi.Mux {
 	r.Group(func(r chi.Router) {
 		r.Use(gmiddleware.ShouldHasBody)
 		r.Post("/register", handler.Register(repo, gopherConfig))
-		r.Post("/login", handler.Login())
+		r.Post("/login", handler.Login(repo, gopherConfig))
 	})
 	return r
 }
