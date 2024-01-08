@@ -10,10 +10,11 @@ import (
 const defaultExpTokenTimeInHours = 12
 
 type GophermartConfig struct {
-	Host        string `env:"ADDRESS"`
-	DatabaseDSN string `env:"DATABASE_DSN"`
-	SecretKey   string `env:"SECRET_KEY"`
-	ExpTime     uint   `env:"EXP_TIME"`
+	Host           string `env:"ADDRESS"`
+	DatabaseDSN    string `env:"DATABASE_DSN"`
+	SecretKey      string `env:"SECRET_KEY"`
+	AccrualAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
+	ExpTime        uint   `env:"EXP_TIME"`
 }
 
 func New() (*GophermartConfig, error) {
@@ -31,5 +32,6 @@ func (c *GophermartConfig) parseFlags() {
 	flag.StringVar(&c.DatabaseDSN, "d", "", "database DSN string")
 	flag.StringVar(&c.SecretKey, "k", "this-need-to-be-replace", "secret key for authentication")
 	flag.UintVar(&c.ExpTime, "e", uint(defaultExpTokenTimeInHours), "token exparation time in hours")
+	flag.StringVar(&c.AccrualAddress, "r", ":8090", "address of accrual system")
 	flag.Parse()
 }
