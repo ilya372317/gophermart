@@ -18,6 +18,7 @@ import (
 	"github.com/ilya372317/gophermart/internal/router"
 	"github.com/ilya372317/gophermart/internal/storage"
 	"github.com/joho/godotenv"
+	"golang.org/x/sync/errgroup"
 )
 
 const logPath = "./log.txt"
@@ -69,36 +70,36 @@ func run() {
 		return
 	}
 
-	server := http.Server{
+	server := &http.Server{
 		Addr:    gophermartConfig.Host,
 		Handler: router.New(storage.New(db), gophermartConfig),
 	}
 
-	go func() {
-		logger.Log.Infof("server is starting at host: [%s]...", gophermartConfig.Host)
-		if err := server.ListenAndServe(); err != nil {
-			if errors.Is(http.ErrServerClosed, err) {
-				logger.Log.Info("server successfully shutdown. goodbye :)")
-				return
-			}
-			logger.Log.Fatalf("failed start server: %v", err)
-			return
-		}
-	}()
+	g := &errgroup.Group{}
+	g.Go(func() error {
+		return runServer(server, gophermartConfig.Host)
+	})
+	g.Go(func() error {
+		<-ctx.Done()
+		return shutdownServer(server)
+	})
+	g.Go(func() error {
+		<-ctx.Done()
+		return stopAccrual(accrualCommand)
+	})
 
-	<-ctx.Done()
-
-	if err := stopAccrual(accrualCommand); err != nil {
-		logger.Log.Warnf("failed stop accrual system: %v", err)
+	if err = g.Wait(); err != nil {
+		logger.Log.Warnf("server shutdown with err: %v", err)
 	}
-	logger.Log.Info("completing requests and stopping server...")
+}
 
+func shutdownServer(server *http.Server) error {
 	shutdownCtx, stop := context.WithTimeout(context.Background(), time.Second*secondsForFinishRequests)
 	defer stop()
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Log.Fatalf("failed shutdown server: %v", err)
-		return
+		return fmt.Errorf("failed shutdown server: %w", err)
 	}
+	return nil
 }
 
 func stopAccrual(cmd *exec.Cmd) error {
@@ -110,7 +111,20 @@ func stopAccrual(cmd *exec.Cmd) error {
 	if err := cmd.Process.Kill(); err != nil {
 		return fmt.Errorf("failed to kill accrual system: %w", err)
 	}
+	logger.Log.Info("accrual stopped.")
 
+	return nil
+}
+
+func runServer(server *http.Server, host string) error {
+	logger.Log.Infof("server is starting at host: [%s]...", host)
+	if err := server.ListenAndServe(); err != nil {
+		if errors.Is(http.ErrServerClosed, err) {
+			logger.Log.Info("server successfully shutdown.")
+			return nil
+		}
+		return fmt.Errorf("failed start server: %w", err)
+	}
 	return nil
 }
 
