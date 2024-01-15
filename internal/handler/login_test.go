@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,6 +26,7 @@ func TestLogin(t *testing.T) {
 		wantCode                int
 		createdUser             *entity.User
 		getUserByLoginReturnErr bool
+		sqlNoRows               bool
 		secretKey               string
 	}{
 		{
@@ -41,6 +43,7 @@ func TestLogin(t *testing.T) {
 			},
 			getUserByLoginReturnErr: false,
 			secretKey:               "secret-key",
+			sqlNoRows:               false,
 		},
 		{
 			name: "invalid credentials",
@@ -52,6 +55,7 @@ func TestLogin(t *testing.T) {
 			createdUser:             nil,
 			getUserByLoginReturnErr: false,
 			secretKey:               "secret-key",
+			sqlNoRows:               false,
 		},
 		{
 			name: "get user by login return err",
@@ -63,6 +67,7 @@ func TestLogin(t *testing.T) {
 			createdUser:             nil,
 			getUserByLoginReturnErr: true,
 			secretKey:               "secret-key",
+			sqlNoRows:               false,
 		},
 		{
 			name: "given password invalid",
@@ -78,6 +83,7 @@ func TestLogin(t *testing.T) {
 			},
 			secretKey:               "secret-key",
 			getUserByLoginReturnErr: false,
+			sqlNoRows:               false,
 		},
 		{
 			name: "failed generate jwt token",
@@ -94,6 +100,18 @@ func TestLogin(t *testing.T) {
 			getUserByLoginReturnErr: false,
 			secretKey:               "",
 		},
+		{
+			name: "not existing login",
+			body: dto.UserCredentials{
+				Login:    "teset-123",
+				Password: "test321",
+			},
+			wantCode:                http.StatusUnauthorized,
+			createdUser:             nil,
+			getUserByLoginReturnErr: true,
+			secretKey:               "secret-key",
+			sqlNoRows:               true,
+		},
 	}
 	ctrl := gomock.NewController(t)
 	ctx := context.Background()
@@ -104,10 +122,17 @@ func TestLogin(t *testing.T) {
 				tt.createdUser.SetPassword(tt.createdUser.Password)
 			}
 			if tt.getUserByLoginReturnErr {
-				strg.EXPECT().
-					GetUserByLogin(ctx, gomock.Eq(tt.body.Login)).
-					Return(nil, fmt.Errorf("failed get user by login")).
-					AnyTimes()
+				if tt.sqlNoRows {
+					strg.EXPECT().
+						GetUserByLogin(ctx, gomock.Eq(tt.body.Login)).
+						Return(nil, sql.ErrNoRows).
+						AnyTimes()
+				} else {
+					strg.EXPECT().
+						GetUserByLogin(ctx, gomock.Eq(tt.body.Login)).
+						Return(nil, fmt.Errorf("failed get user by login")).
+						AnyTimes()
+				}
 			} else {
 				strg.EXPECT().
 					GetUserByLogin(ctx, gomock.Eq(tt.body.Login)).

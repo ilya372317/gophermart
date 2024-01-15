@@ -74,7 +74,7 @@ func TestDBStorage_GetUserByID(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:     "user not fount case",
+			name:     "user not found case",
 			fields:   nil,
 			argument: 1,
 			want:     nil,

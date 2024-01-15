@@ -2,6 +2,8 @@ package handler
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,6 +13,8 @@ import (
 	"github.com/ilya372317/gophermart/internal/entity"
 	"github.com/ilya372317/gophermart/internal/logger"
 )
+
+const invalidUserCredentialsMessage = "invalid user credentials"
 
 type LoginStorage interface {
 	GetUserByLogin(ctx context.Context, login string) (*entity.User, error)
@@ -25,12 +29,16 @@ func Login(loginStorage LoginStorage, gopherConfig *config.GophermartConfig) htt
 		}
 		user, err := loginStorage.GetUserByLogin(request.Context(), body.Login)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				http.Error(writer, invalidUserCredentialsMessage, http.StatusUnauthorized)
+				return
+			}
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		passValid := user.CheckPassword(body.Password)
 		if !passValid {
-			http.Error(writer, "invalid user credentials", http.StatusUnauthorized)
+			http.Error(writer, invalidUserCredentialsMessage, http.StatusUnauthorized)
 			return
 		}
 
