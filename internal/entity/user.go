@@ -12,9 +12,11 @@ import (
 const nullUserID = 0
 
 type User struct {
-	Login    string `db:"login"`
-	Password string `db:"password"`
-	ID       uint   `db:"id"`
+	CreatedAT time.Time `db:"created_at"`
+	UpdatedAT time.Time `db:"updated_at"`
+	Login     string    `db:"login"`
+	Password  string    `db:"password"`
+	ID        uint      `db:"id"`
 }
 
 type Claims struct {

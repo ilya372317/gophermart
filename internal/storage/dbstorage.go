@@ -20,8 +20,9 @@ func New(db *sqlx.DB) *DBStorage {
 
 func (d *DBStorage) GetUserByID(ctx context.Context, id uint) (*entity.User, error) {
 	user := &entity.User{}
-	if err := d.db.QueryRowContext(ctx, "SELECT id, login, password FROM users WHERE id = $1", id).
-		Scan(&user.ID, &user.Login, &user.Password); err != nil {
+	if err := d.db.QueryRowxContext(ctx,
+		"SELECT id, login, password, created_at, updated_at FROM users WHERE id = $1", id).
+		StructScan(user); err != nil {
 		return nil, fmt.Errorf("failed get user by id: %w", err)
 	}
 	return user, nil
@@ -29,7 +30,8 @@ func (d *DBStorage) GetUserByID(ctx context.Context, id uint) (*entity.User, err
 
 func (d *DBStorage) GetUserByLogin(ctx context.Context, login string) (*entity.User, error) {
 	user := &entity.User{}
-	if err := d.db.QueryRowxContext(ctx, "SELECT id, login, password FROM users WHERE login = $1", login).
+	if err := d.db.QueryRowxContext(ctx,
+		"SELECT id, login, password, created_at, updated_at FROM users WHERE login = $1", login).
 		StructScan(user); err != nil {
 		return nil, fmt.Errorf("failed find user by id: %w", err)
 	}

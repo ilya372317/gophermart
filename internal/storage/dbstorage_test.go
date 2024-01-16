@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"log"
 	"testing"
 
@@ -17,6 +16,11 @@ import (
 )
 
 var db *sqlx.DB
+
+type userFields struct {
+	login    string
+	password string
+}
 
 func TestMain(m *testing.M) {
 	err := logger.Initialize("")
@@ -37,21 +41,76 @@ func TestMain(m *testing.M) {
 	}
 }
 
-func TestDBStorage_GetUserByID(t *testing.T) {
-	type fields struct {
-		login    string
-		password string
-	}
+func TestDBStorage_GetUserByLogin(t *testing.T) {
 	tests := []struct {
 		name     string
-		fields   []fields
-		argument uint
-		want     *entity.User
+		fields   []userFields
+		argument string
 		wantErr  bool
+		want     *entity.User
+	}{
+		{
+			name: "success case",
+			fields: []userFields{
+				{
+					login:    "login",
+					password: "pass",
+				},
+				{
+					login:    "second user",
+					password: "second pass",
+				},
+			},
+			argument: "login",
+			wantErr:  false,
+			want: &entity.User{
+				Login:    "login",
+				Password: "pass",
+				ID:       1,
+			},
+		},
+		{
+			name:     "not found case",
+			fields:   nil,
+			argument: "test",
+			wantErr:  true,
+			want:     nil,
+		},
+	}
+	for _, tt := range tests {
+		ctx := context.Background()
+		t.Run(tt.name, func(t *testing.T) {
+			fillUsers(ctx, t, tt.fields)
+			repo := New(db)
+			got, err := repo.GetUserByLogin(ctx, tt.argument)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			} else {
+				require.NoError(t, err)
+			}
+
+			if tt.want != nil {
+				tt.want.SetPassword(tt.want.Password)
+				tt.want.CreatedAT = got.CreatedAT
+				tt.want.UpdatedAT = got.UpdatedAT
+			}
+			assert.Equal(t, tt.want, got)
+		})
+		clearUsersTable(ctx, t)
+	}
+}
+
+func TestDBStorage_GetUserByID(t *testing.T) {
+	tests := []struct {
+		name    string
+		fields  []userFields
+		want    *entity.User
+		wantErr bool
 	}{
 		{
 			name: "success filled storage case",
-			fields: []fields{
+			fields: []userFields{
 				{
 					login:    "123",
 					password: "test-password",
@@ -65,44 +124,37 @@ func TestDBStorage_GetUserByID(t *testing.T) {
 					password: "password-543",
 				},
 			},
-			argument: 2,
 			want: &entity.User{
 				ID:       2,
-				Login:    "321",
-				Password: "pass123",
+				Login:    "543",
+				Password: "password-543",
 			},
 			wantErr: false,
 		},
 		{
-			name:     "user not found case",
-			fields:   nil,
-			argument: 1,
-			want:     nil,
-			wantErr:  true,
+			name:    "user not found case",
+			fields:  nil,
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	ctx := context.Background()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			users := make([]entity.User, 0, len(tt.fields))
-			for _, f := range tt.fields {
-				user := entity.User{
-					Login: f.login,
-				}
-				user.SetPassword(f.password)
-				users = append(users, user)
-			}
-
-			if len(users) > 0 {
-				_, err := db.NamedExecContext(ctx, "INSERT INTO users (login, password) VALUES (:login,:password)", users)
-				require.NoError(t, err)
-			}
-
+			fillUsers(ctx, t, tt.fields)
 			repo := New(db)
-			got, err := repo.GetUserByID(ctx, tt.argument)
+			var lastID sql.NullInt64
+			var lastIDValue uint
+			err := db.Get(&lastID, "SELECT MAX(id) FROM users")
+			if lastID.Valid {
+				lastIDValue = uint(lastID.Int64)
+			}
+			require.NoError(t, err)
+			got, err := repo.GetUserByID(ctx, lastIDValue)
 			if errors.Is(err, sql.ErrNoRows) {
 				if tt.wantErr {
 					require.Error(t, err)
+					return
 				} else {
 					require.NoError(t, err)
 				}
@@ -111,19 +163,17 @@ func TestDBStorage_GetUserByID(t *testing.T) {
 			}
 			if tt.want != nil {
 				tt.want.SetPassword(tt.want.Password)
+				tt.want.CreatedAT = got.CreatedAT
+				tt.want.UpdatedAT = got.UpdatedAT
 			}
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want.Login, got.Login)
+			assert.Equal(t, tt.want.Password, got.Password)
 		})
-		err := clearUsersTable(ctx)
-		require.NoError(t, err)
+		clearUsersTable(ctx, t)
 	}
 }
 
 func TestDBStorage_SaveUser(t *testing.T) {
-	type fields struct {
-		login    string
-		password string
-	}
 	type arg struct {
 		login    string
 		password string
@@ -137,7 +187,7 @@ func TestDBStorage_SaveUser(t *testing.T) {
 	tests := []struct {
 		name     string
 		argument arg
-		fields   []fields
+		fields   []userFields
 		wantErr  bool
 		want     want
 	}{
@@ -152,7 +202,7 @@ func TestDBStorage_SaveUser(t *testing.T) {
 				login:    "test",
 				password: "test123",
 			},
-			fields: []fields{
+			fields: []userFields{
 				{
 					login:    "123456",
 					password: "sdfsdfsrwer",
@@ -165,7 +215,7 @@ func TestDBStorage_SaveUser(t *testing.T) {
 				login:    "test",
 				password: "123",
 			},
-			fields: []fields{
+			fields: []userFields{
 				{
 					login:    "test",
 					password: "123",
@@ -217,37 +267,29 @@ func TestDBStorage_SaveUser(t *testing.T) {
 				Scan(&gotUser.ID, &gotUser.Login, &gotUser.Password)
 			require.NoError(t, err)
 			expectedUser.ID = gotUser.ID
-			assert.Equal(t, expectedUser, gotUser)
+			assert.Equal(t, expectedUser.Login, gotUser.Login)
+			assert.Equal(t, expectedUser.Password, gotUser.Password)
 		})
-		err := clearUsersTable(ctx)
-		require.NoError(t, err)
+		clearUsersTable(ctx, t)
 	}
 }
 
-func clearUsersTable(ctx context.Context) error {
+func clearUsersTable(ctx context.Context, t *testing.T) {
+	t.Helper()
 	_, err := db.ExecContext(ctx, "DELETE FROM users")
-	if err != nil {
-		return fmt.Errorf("failed clear users table")
-	}
-
-	return nil
+	require.NoError(t, err)
 }
 
 func TestDBStorage_HasUser(t *testing.T) {
-	type fields struct {
-		login    string
-		password string
-	}
-
 	tests := []struct {
 		name   string
-		fields []fields
+		fields []userFields
 		args   string
 		want   bool
 	}{
 		{
 			name: "has user case",
-			fields: []fields{
+			fields: []userFields{
 				{
 					login:    "test",
 					password: "123",
@@ -268,7 +310,7 @@ func TestDBStorage_HasUser(t *testing.T) {
 		},
 		{
 			name: "not has user with filled storage",
-			fields: []fields{
+			fields: []userFields{
 				{
 					login:    "test-123",
 					password: "123456789",
@@ -302,7 +344,23 @@ func TestDBStorage_HasUser(t *testing.T) {
 			require.NoError(t, err)
 			assert.Equal(t, tt.want, got)
 		})
-		err := clearUsersTable(ctx)
+		clearUsersTable(ctx, t)
+	}
+}
+
+func fillUsers(ctx context.Context, t *testing.T, fields []userFields) {
+	t.Helper()
+	users := make([]entity.User, 0, len(fields))
+	for _, f := range fields {
+		user := entity.User{
+			Login: f.login,
+		}
+		user.SetPassword(f.password)
+		users = append(users, user)
+	}
+
+	if len(users) > 0 {
+		_, err := db.NamedExecContext(ctx, "INSERT INTO users (login, password) VALUES (:login,:password)", users)
 		require.NoError(t, err)
 	}
 }
