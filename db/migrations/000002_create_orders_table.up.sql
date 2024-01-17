@@ -5,10 +5,10 @@ CREATE TABLE orders
     id         BIGSERIAL PRIMARY KEY                    NOT NULL,
     user_id    BIGINT                                   NOT NULL REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
     status     ORDER_STATUS             DEFAULT ('NEW') NOT NULL,
-    number     BIGINT                                   NOT NULL,
+    number     VARCHAR(500)                             NOT NULL,
     accrual    BIGINT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 CREATE TRIGGER set_order_updated_at
     BEFORE update
