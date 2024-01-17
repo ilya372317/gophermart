@@ -31,7 +31,7 @@ func (c *GophermartConfig) parseFlags() {
 	flag.StringVar(&c.Host, "a", ":8080", "address where server will listen requests")
 	flag.StringVar(&c.DatabaseDSN, "d", "", "database DSN string")
 	flag.StringVar(&c.SecretKey, "k", "this-need-to-be-replace", "secret key for authentication")
-	flag.UintVar(&c.ExpTime, "e", uint(defaultExpTokenTimeInHours), "token exparation time in hours")
+	flag.UintVar(&c.ExpTime, "e", uint(defaultExpTokenTimeInHours), "token expiration time in hours")
 	flag.StringVar(&c.AccrualAddress, "r", ":8090", "address of accrual system")
 	flag.Parse()
 }

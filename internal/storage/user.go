@@ -7,16 +7,7 @@ import (
 	"fmt"
 
 	"github.com/ilya372317/gophermart/internal/entity"
-	"github.com/jmoiron/sqlx"
 )
-
-type DBStorage struct {
-	db *sqlx.DB
-}
-
-func New(db *sqlx.DB) *DBStorage {
-	return &DBStorage{db: db}
-}
 
 func (d *DBStorage) GetUserByID(ctx context.Context, id uint) (*entity.User, error) {
 	user := &entity.User{}
