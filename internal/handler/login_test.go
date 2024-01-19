@@ -117,7 +117,7 @@ func TestLogin(t *testing.T) {
 	ctx := context.Background()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			strg := handler_mock.NewMockRegisterStorage(ctrl)
+			strg := handler_mock.NewMockLoginStorage(ctrl)
 			if tt.createdUser != nil {
 				tt.createdUser.SetPassword(tt.createdUser.Password)
 			}
