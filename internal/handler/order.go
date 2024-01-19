@@ -69,6 +69,7 @@ func RegisterOrder(gopherStorage RegisterOrderStorage) http.HandlerFunc {
 			return
 		}
 		//TODO: 4.send queue job on processing
+		writer.WriteHeader(http.StatusAccepted)
 		if _, err := fmt.Fprint(writer, "order registered"); err != nil {
 			logger.Log.Warnf("faield write response: %v", err)
 		}
