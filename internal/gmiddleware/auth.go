@@ -10,10 +10,6 @@ import (
 	"github.com/ilya372317/gophermart/internal/entity"
 )
 
-type userKey string
-
-var key userKey = "user"
-
 type AuthStorage interface {
 	GetUserByID(ctx context.Context, id uint) (*entity.User, error)
 }
@@ -47,7 +43,7 @@ func Auth(gopherConfig *config.GophermartConfig, authStorage AuthStorage) func(h
 				http.Error(writer, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			ctx := context.WithValue(request.Context(), key, user)
+			ctx := context.WithValue(request.Context(), entity.UserKey, user)
 
 			handler.ServeHTTP(writer, request.WithContext(ctx))
 		})

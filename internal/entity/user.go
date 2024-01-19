@@ -11,6 +11,10 @@ import (
 
 const nullUserID = 0
 
+type userKey string
+
+var UserKey userKey = "user"
+
 type User struct {
 	CreatedAT time.Time `db:"created_at"`
 	UpdatedAT time.Time `db:"updated_at"`

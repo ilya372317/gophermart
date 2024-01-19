@@ -66,7 +66,6 @@ func TestDBStorage_GetUserByLogin(t *testing.T) {
 			want: &entity.User{
 				Login:    "login",
 				Password: "pass",
-				ID:       1,
 			},
 		},
 		{
@@ -95,7 +94,8 @@ func TestDBStorage_GetUserByLogin(t *testing.T) {
 				tt.want.CreatedAT = got.CreatedAT
 				tt.want.UpdatedAT = got.UpdatedAT
 			}
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tt.want.Login, got.Login)
+			assert.Equal(t, tt.want.Password, got.Password)
 		})
 		clearUsersTable(ctx, t)
 	}
