@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/ilya372317/gophermart/internal/entity"
@@ -10,7 +11,9 @@ import (
 )
 
 type orderFields struct {
-	number int `db:"number"`
+	number  int `db:"number"`
+	accrual sql.NullInt64
+	status  string
 }
 
 func TestDBStorage_HasOrderByNumber(t *testing.T) {
@@ -128,15 +131,21 @@ func fillOrdersTable(ctx context.Context, t *testing.T, fields []orderFields, us
 	t.Helper()
 	orders := make([]entity.Order, 0, len(fields))
 	for _, f := range fields {
+		if len(f.status) == 0 {
+			f.status = "NEW"
+		}
 		orders = append(orders, entity.Order{
-			Number: f.number,
-			UserID: userID,
+			Number:  f.number,
+			UserID:  userID,
+			Accrual: f.accrual,
+			Status:  f.status,
 		})
 	}
 
 	if len(fields) > 0 {
 		_, err := db.NamedExecContext(ctx,
-			"INSERT INTO orders (user_id, number) VALUES (:user_id, :number)", orders)
+			"INSERT INTO orders (user_id, number, accrual, status) VALUES (:user_id, :number, :accrual, :status)",
+			orders)
 		require.NoError(t, err)
 	}
 }
@@ -226,6 +235,171 @@ func TestDBStorage_SaveOrder(t *testing.T) {
 			assert.Equal(t, lastSavedOrder.UserID, userID)
 			assert.Equal(t, lastSavedOrder.Status, "NEW")
 			assert.False(t, lastSavedOrder.Accrual.Valid)
+		})
+	}
+}
+
+func TestDBStorage_GetOrderByNumber(t *testing.T) {
+	type want struct {
+		number  int
+		status  string
+		accrual sql.NullInt64
+	}
+	tests := []struct {
+		name     string
+		argument int
+		fields   []orderFields
+		want     want
+		wantErr  bool
+	}{
+		{
+			name:     "success case",
+			argument: 123,
+			fields: []orderFields{
+				{
+					number: 123,
+					accrual: sql.NullInt64{
+						Int64: 123,
+						Valid: true,
+					},
+					status: "INVALID",
+				},
+			},
+			want: want{
+				number: 123,
+				status: "INVALID",
+				accrual: sql.NullInt64{
+					Int64: 123,
+					Valid: true,
+				},
+			},
+			wantErr: false,
+		},
+	}
+	ctx := context.Background()
+	clearUsersTable(ctx, t)
+	userID := createTestUser(ctx, t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearOrdersTable(ctx, t)
+			fillOrdersTable(ctx, t, tt.fields, userID)
+			repo := New(db)
+			got, err := repo.GetOrderByNumber(ctx, tt.argument)
+			if tt.wantErr {
+				require.ErrorIs(t, err, sql.ErrNoRows)
+				require.Error(t, err)
+				return
+			} else {
+				require.NoError(t, err)
+			}
+
+			assert.Equal(t, tt.want.number, got.Number)
+			assert.Equal(t, tt.want.accrual, got.Accrual)
+			assert.Equal(t, tt.want.status, got.Status)
+		})
+	}
+}
+
+func TestDBStorage_UpdateOrderStatusByNumber(t *testing.T) {
+	type argument struct {
+		number int
+		status string
+	}
+
+	tests := []struct {
+		name     string
+		field    orderFields
+		argument argument
+		wantErr  bool
+	}{
+		{
+			name: "success case",
+			field: orderFields{
+				number: 123,
+			},
+			argument: argument{
+				number: 123,
+				status: "INVALID",
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid status case",
+			field: orderFields{
+				number: 123,
+			},
+			argument: argument{
+				number: 123,
+				status: "INVALID_NAME",
+			},
+			wantErr: true,
+		},
+		{
+			name: "no rows affected case",
+			field: orderFields{
+				number: 123,
+			},
+			argument: argument{
+				number: 321,
+				status: "PROCESSED",
+			},
+			wantErr: true,
+		},
+		{
+			name: "update status to PROCESSING",
+			field: orderFields{
+				number: 123,
+			},
+			argument: argument{
+				number: 123,
+				status: "PROCESSING",
+			},
+			wantErr: false,
+		},
+		{
+			name: "update status to INVALID",
+			field: orderFields{
+				number: 123,
+			},
+			argument: argument{
+				number: 123,
+				status: "INVALID",
+			},
+			wantErr: false,
+		},
+		{
+			name: "update status to PROCESSED",
+			field: orderFields{
+				number: 123,
+			},
+			argument: argument{
+				number: 123,
+				status: "PROCESSED",
+			},
+			wantErr: false,
+		},
+	}
+	ctx := context.Background()
+	clearUsersTable(ctx, t)
+	userID := createTestUser(ctx, t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearOrdersTable(ctx, t)
+			fields := make([]orderFields, 0)
+			fields = append(fields, tt.field)
+			fillOrdersTable(ctx, t, fields, userID)
+			repo := New(db)
+			err := repo.UpdateOrderStatusByNumber(ctx, tt.argument.number, tt.argument.status)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			} else {
+				require.NoError(t, err)
+			}
+			orderAfterUpdate, err := repo.GetOrderByNumber(ctx, tt.field.number)
+			require.NoError(t, err)
+			assert.Equal(t, tt.argument.number, orderAfterUpdate.Number)
+			assert.Equal(t, tt.argument.status, orderAfterUpdate.Status)
 		})
 	}
 }
