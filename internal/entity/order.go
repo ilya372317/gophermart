@@ -5,6 +5,12 @@ import (
 	"time"
 )
 
+const (
+	StatusProcessing = "PROCESSING"
+	StatusInvalid    = "INVALID"
+	StatusProcessed  = "PROCESSED"
+)
+
 type Order struct {
 	CreatedAT time.Time     `db:"created_at"`
 	UpdatedAT time.Time     `db:"updated_at"`

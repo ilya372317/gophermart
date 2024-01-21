@@ -403,3 +403,111 @@ func TestDBStorage_UpdateOrderStatusByNumber(t *testing.T) {
 		})
 	}
 }
+
+func TestDBStorage_UpdateOrderAccrualByNumber(t *testing.T) {
+	type argument struct {
+		number  int
+		accrual sql.NullInt64
+	}
+	tests := []struct {
+		name     string
+		field    orderFields
+		wantErr  bool
+		argument argument
+	}{
+		{
+			name: "success case",
+			field: orderFields{
+				number: 123,
+				accrual: sql.NullInt64{
+					Int64: 10,
+					Valid: true,
+				},
+			},
+			wantErr: false,
+			argument: argument{
+				number: 123,
+				accrual: sql.NullInt64{
+					Int64: 20,
+					Valid: true,
+				},
+			},
+		},
+		{
+			name: "no rows was updated case",
+			field: orderFields{
+				number: 321,
+				accrual: sql.NullInt64{
+					Int64: 10,
+					Valid: true,
+				},
+			},
+			wantErr: true,
+			argument: argument{
+				number: 123,
+				accrual: sql.NullInt64{
+					Int64: 123,
+					Valid: true,
+				},
+			},
+		},
+		{
+			name: "update order accrual from null to value",
+			field: orderFields{
+				number: 123,
+			},
+			wantErr: false,
+			argument: argument{
+				number: 123,
+				accrual: sql.NullInt64{
+					Int64: 10,
+					Valid: true,
+				},
+			},
+		},
+		{
+			name: "update order accrual from value to null",
+			field: orderFields{
+				number: 123,
+				accrual: sql.NullInt64{
+					Int64: 123,
+					Valid: true,
+				},
+			},
+			wantErr: false,
+			argument: argument{
+				number: 123,
+			},
+		},
+	}
+	ctx := context.Background()
+	clearUsersTable(ctx, t)
+	userID := createTestUser(ctx, t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearOrdersTable(ctx, t)
+			fields := make([]orderFields, 0)
+			fields = append(fields, tt.field)
+			fillOrdersTable(ctx, t, fields, userID)
+			repo := New(db)
+			err := repo.UpdateOrderAccrualByNumber(ctx, tt.argument.number, tt.argument.accrual)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			} else {
+				require.NoError(t, err)
+			}
+			got := getLastOrder(ctx, t)
+			assert.Equal(t, tt.argument.number, got.Number)
+			assert.Equal(t, tt.argument.accrual, got.Accrual)
+		})
+	}
+}
+
+func getLastOrder(ctx context.Context, t *testing.T) *entity.Order {
+	t.Helper()
+	order := &entity.Order{}
+	err := db.GetContext(ctx, order, "SELECT * FROM orders WHERE id = (SELECT MAX(id) FROM orders)")
+	require.NoError(t, err)
+	return order
+}

@@ -12,7 +12,7 @@ import (
 func (d *DBStorage) GetUserByID(ctx context.Context, id uint) (*entity.User, error) {
 	user := &entity.User{}
 	if err := d.db.QueryRowxContext(ctx,
-		"SELECT id, login, password, created_at, updated_at FROM users WHERE id = $1", id).
+		"SELECT * FROM users WHERE id = $1", id).
 		StructScan(user); err != nil {
 		return nil, fmt.Errorf("failed get user by id: %w", err)
 	}
@@ -22,7 +22,7 @@ func (d *DBStorage) GetUserByID(ctx context.Context, id uint) (*entity.User, err
 func (d *DBStorage) GetUserByLogin(ctx context.Context, login string) (*entity.User, error) {
 	user := &entity.User{}
 	if err := d.db.QueryRowxContext(ctx,
-		"SELECT id, login, password, created_at, updated_at FROM users WHERE login = $1", login).
+		"SELECT * FROM users WHERE login = $1", login).
 		StructScan(user); err != nil {
 		return nil, fmt.Errorf("failed find user by id: %w", err)
 	}
@@ -47,7 +47,7 @@ func (d *DBStorage) SaveUser(ctx context.Context, user entity.User) error {
 func (d *DBStorage) HasUser(ctx context.Context, login string) (bool, error) {
 	user := entity.User{}
 	err := d.db.
-		QueryRowxContext(ctx, "SELECT id, login, password FROM users WHERE login = $1", login).
+		QueryRowxContext(ctx, "SELECT id FROM users WHERE login = $1", login).
 		StructScan(&user)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -57,4 +57,23 @@ func (d *DBStorage) HasUser(ctx context.Context, login string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (d *DBStorage) UpdateUserBalanceByID(ctx context.Context, id uint, balance int) error {
+	res, err := d.db.ExecContext(ctx,
+		"UPDATE users SET balance = $1 WHERE id = $2", balance, id)
+	if err != nil {
+		return fmt.Errorf("failed update user balance by id: %w", err)
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed calculate updated users balance by id: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("no users balance was updated")
+	}
+
+	return nil
 }

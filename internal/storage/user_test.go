@@ -20,6 +20,7 @@ var db *sqlx.DB
 type userFields struct {
 	login    string
 	password string
+	balance  int
 }
 
 func TestMain(m *testing.M) {
@@ -363,4 +364,76 @@ func fillUsers(ctx context.Context, t *testing.T, fields []userFields) {
 		_, err := db.NamedExecContext(ctx, "INSERT INTO users (login, password) VALUES (:login,:password)", users)
 		require.NoError(t, err)
 	}
+}
+
+func TestDBStorage_UpdateUserBalanceByID(t *testing.T) {
+	tests := []struct {
+		field        userFields
+		name         string
+		argument     int
+		wantErr      bool
+		userIDExists bool
+	}{
+		{
+			name: "success case",
+			field: userFields{
+				login:    "123",
+				password: "123",
+				balance:  10,
+			},
+			wantErr:      false,
+			argument:     20,
+			userIDExists: true,
+		},
+		{
+			name: "user id not exists case",
+			field: userFields{
+				login:    "123",
+				password: "123",
+				balance:  10,
+			},
+			wantErr:      true,
+			argument:     20,
+			userIDExists: false,
+		},
+	}
+	ctx := context.Background()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearUsersTable(ctx, t)
+			fields := make([]userFields, 0)
+			fields = append(fields, tt.field)
+			fillUsers(ctx, t, fields)
+			repo := New(db)
+			userID := getLastUserID(ctx, t)
+			if !tt.userIDExists {
+				userID = 0
+			}
+			err := repo.UpdateUserBalanceByID(ctx, userID, tt.argument)
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			} else {
+				require.NoError(t, err)
+			}
+			got := getLastUser(ctx, t)
+			assert.Equal(t, tt.argument, got.Balance)
+		})
+	}
+}
+
+func getLastUser(ctx context.Context, t *testing.T) *entity.User {
+	t.Helper()
+	user := &entity.User{}
+	err := db.GetContext(ctx, user, "SELECT * FROM users WHERE id = (SELECT MAX(id) FROM users)")
+	require.NoError(t, err)
+	return user
+}
+
+func getLastUserID(ctx context.Context, t *testing.T) uint {
+	t.Helper()
+	var userID uint
+	err := db.GetContext(ctx, &userID, "SELECT MAX(id) FROM users")
+	require.NoError(t, err)
+	return userID
 }

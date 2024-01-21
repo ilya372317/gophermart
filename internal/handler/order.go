@@ -14,9 +14,19 @@ type RegisterOrderStorage interface {
 	HasOrderByNumber(context.Context, int) (bool, error)
 	HasOrderByNumberAndUserID(context.Context, int, uint) (bool, error)
 	SaveOrder(context.Context, *entity.Order) error
+	UpdateOrderStatusByNumber(context.Context, int, string) error
+	GetOrderByNumber(context.Context, int) (*entity.Order, error)
+	UpdateUserBalanceByID(ctx context.Context, id uint, balance int) error
 }
 
-func RegisterOrder(gopherStorage RegisterOrderStorage) http.HandlerFunc {
+type OrderProcessor interface {
+	ProcessOrder(int)
+}
+
+func RegisterOrder(
+	gopherStorage RegisterOrderStorage,
+	orderProcessor OrderProcessor,
+) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		registerOrder, err := dto.CreateRegisterOrderFormRequest(request)
 		if err != nil {
@@ -68,10 +78,7 @@ func RegisterOrder(gopherStorage RegisterOrderStorage) http.HandlerFunc {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		//TODO: 4.send queue job on processingsd
-		go func(number int) {
-
-		}(newOrder.Number)
+		go orderProcessor.ProcessOrder(newOrder.Number)
 		writer.WriteHeader(http.StatusAccepted)
 		if _, err := fmt.Fprint(writer, "order registered"); err != nil {
 			logger.Log.Warnf("faield write response: %v", err)

@@ -158,11 +158,13 @@ func TestRegisterOrder(t *testing.T) {
 						AnyTimes()
 				}
 			}
+			orderProcessor := handler_mock.NewMockOrderProcessor(ctrl)
+			orderProcessor.EXPECT().ProcessOrder(intArgument).AnyTimes()
 			request := httptest.NewRequest(http.MethodPost,
 				"/api/user/orders", bytes.NewReader([]byte(tt.argument)))
 			request = request.WithContext(requestContext)
 			writer := httptest.NewRecorder()
-			handler := RegisterOrder(repo)
+			handler := RegisterOrder(repo, orderProcessor)
 			handler.ServeHTTP(writer, request)
 
 			res := writer.Result()

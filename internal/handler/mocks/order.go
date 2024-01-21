@@ -35,6 +35,21 @@ func (m *MockRegisterOrderStorage) EXPECT() *MockRegisterOrderStorageMockRecorde
 	return m.recorder
 }
 
+// GetOrderByNumber mocks base method.
+func (m *MockRegisterOrderStorage) GetOrderByNumber(arg0 context.Context, arg1 int) (*entity.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderByNumber", arg0, arg1)
+	ret0, _ := ret[0].(*entity.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderByNumber indicates an expected call of GetOrderByNumber.
+func (mr *MockRegisterOrderStorageMockRecorder) GetOrderByNumber(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByNumber", reflect.TypeOf((*MockRegisterOrderStorage)(nil).GetOrderByNumber), arg0, arg1)
+}
+
 // HasOrderByNumber mocks base method.
 func (m *MockRegisterOrderStorage) HasOrderByNumber(arg0 context.Context, arg1 int) (bool, error) {
 	m.ctrl.T.Helper()
@@ -77,4 +92,67 @@ func (m *MockRegisterOrderStorage) SaveOrder(arg0 context.Context, arg1 *entity.
 func (mr *MockRegisterOrderStorageMockRecorder) SaveOrder(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveOrder", reflect.TypeOf((*MockRegisterOrderStorage)(nil).SaveOrder), arg0, arg1)
+}
+
+// UpdateOrderStatusByNumber mocks base method.
+func (m *MockRegisterOrderStorage) UpdateOrderStatusByNumber(arg0 context.Context, arg1 int, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateOrderStatusByNumber", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateOrderStatusByNumber indicates an expected call of UpdateOrderStatusByNumber.
+func (mr *MockRegisterOrderStorageMockRecorder) UpdateOrderStatusByNumber(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateOrderStatusByNumber", reflect.TypeOf((*MockRegisterOrderStorage)(nil).UpdateOrderStatusByNumber), arg0, arg1, arg2)
+}
+
+// UpdateUserBalanceByID mocks base method.
+func (m *MockRegisterOrderStorage) UpdateUserBalanceByID(ctx context.Context, id uint, balance int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUserBalanceByID", ctx, id, balance)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUserBalanceByID indicates an expected call of UpdateUserBalanceByID.
+func (mr *MockRegisterOrderStorageMockRecorder) UpdateUserBalanceByID(ctx, id, balance interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserBalanceByID", reflect.TypeOf((*MockRegisterOrderStorage)(nil).UpdateUserBalanceByID), ctx, id, balance)
+}
+
+// MockOrderProcessor is a mock of OrderProcessor interface.
+type MockOrderProcessor struct {
+	ctrl     *gomock.Controller
+	recorder *MockOrderProcessorMockRecorder
+}
+
+// MockOrderProcessorMockRecorder is the mock recorder for MockOrderProcessor.
+type MockOrderProcessorMockRecorder struct {
+	mock *MockOrderProcessor
+}
+
+// NewMockOrderProcessor creates a new mock instance.
+func NewMockOrderProcessor(ctrl *gomock.Controller) *MockOrderProcessor {
+	mock := &MockOrderProcessor{ctrl: ctrl}
+	mock.recorder = &MockOrderProcessorMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockOrderProcessor) EXPECT() *MockOrderProcessorMockRecorder {
+	return m.recorder
+}
+
+// ProcessOrder mocks base method.
+func (m *MockOrderProcessor) ProcessOrder(arg0 int) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "ProcessOrder", arg0)
+}
+
+// ProcessOrder indicates an expected call of ProcessOrder.
+func (mr *MockOrderProcessorMockRecorder) ProcessOrder(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessOrder", reflect.TypeOf((*MockOrderProcessor)(nil).ProcessOrder), arg0)
 }

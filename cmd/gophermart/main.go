@@ -12,9 +12,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ilya372317/gophermart/internal/accrual"
 	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/dbmanager"
 	"github.com/ilya372317/gophermart/internal/logger"
+	"github.com/ilya372317/gophermart/internal/orderproc"
 	"github.com/ilya372317/gophermart/internal/router"
 	"github.com/ilya372317/gophermart/internal/storage"
 	"github.com/joho/godotenv"
@@ -70,9 +72,12 @@ func run() {
 		return
 	}
 
+	repo := storage.New(db)
+	orderProcessor := orderproc.New(accrual.New(gophermartConfig.AccrualAddress), repo)
+
 	server := &http.Server{
 		Addr:    gophermartConfig.Host,
-		Handler: router.New(storage.New(db), gophermartConfig),
+		Handler: router.New(repo, gophermartConfig, orderProcessor),
 	}
 
 	g := &errgroup.Group{}

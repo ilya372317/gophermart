@@ -21,6 +21,7 @@ type User struct {
 	Login     string    `db:"login"`
 	Password  string    `db:"password"`
 	ID        uint      `db:"id"`
+	Balance   int       `db:"balance"`
 }
 
 type Claims struct {

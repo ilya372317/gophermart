@@ -58,7 +58,7 @@ func (d *DBStorage) GetOrderByNumber(ctx context.Context, number int) (*entity.O
 func (d *DBStorage) UpdateOrderStatusByNumber(ctx context.Context, number int, status string) error {
 	res, err := d.db.ExecContext(ctx, "UPDATE orders SET status = $1 WHERE number = $2", status, number)
 	if err != nil {
-		return fmt.Errorf("failed update order status by number")
+		return fmt.Errorf("failed update order status by number: %w", err)
 	}
 
 	updatedRows, err := res.RowsAffected()
@@ -69,6 +69,24 @@ func (d *DBStorage) UpdateOrderStatusByNumber(ctx context.Context, number int, s
 
 	if updatedRows == 0 {
 		return fmt.Errorf("no rows was updated")
+	}
+
+	return nil
+}
+
+func (d *DBStorage) UpdateOrderAccrualByNumber(ctx context.Context, number int, accrual sql.NullInt64) error {
+	res, err := d.db.ExecContext(ctx, "UPDATE orders SET accrual = $1 WHERE number = $2", accrual, number)
+	if err != nil {
+		return fmt.Errorf("failed update oreder accrual: %w", err)
+	}
+
+	updatedRows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed get affected rows on order accrual update: %w", err)
+	}
+
+	if updatedRows == 0 {
+		return fmt.Errorf("no accrual fields of orders was updated")
 	}
 
 	return nil
