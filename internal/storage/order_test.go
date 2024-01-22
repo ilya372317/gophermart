@@ -511,3 +511,84 @@ func getLastOrder(ctx context.Context, t *testing.T) *entity.Order {
 	require.NoError(t, err)
 	return order
 }
+
+func TestDBStorage_GetOrderListByUserID(t *testing.T) {
+	defaultOrderFields := []orderFields{
+		{
+			number: 123,
+			accrual: sql.NullInt64{
+				Int64: 10,
+				Valid: true,
+			},
+			status: "INVALID",
+		},
+		{
+			number: 321,
+			accrual: sql.NullInt64{
+				Int64: 0,
+				Valid: false,
+			},
+			status: "PROCESSED",
+		},
+		{
+			number: 567,
+			accrual: sql.NullInt64{
+				Int64: 30,
+				Valid: true,
+			},
+			status: "PROCESSING",
+		},
+	}
+
+	tests := []struct {
+		name            string
+		fields          []orderFields
+		userIDIsCorrect bool
+	}{
+		{
+			name:            "success multiply item case",
+			fields:          defaultOrderFields,
+			userIDIsCorrect: true,
+		},
+		{
+			name:            "filled storage but wrong user id case",
+			fields:          defaultOrderFields,
+			userIDIsCorrect: false,
+		},
+		{
+			name:            "empty storage",
+			fields:          nil,
+			userIDIsCorrect: true,
+		},
+	}
+	ctx := context.Background()
+	clearUsersTable(ctx, t)
+	userID := createTestUser(ctx, t)
+	const notExistedUserID = uint(0)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearOrdersTable(ctx, t)
+			fillOrdersTable(ctx, t, tt.fields, userID)
+			if !tt.userIDIsCorrect {
+				userID = notExistedUserID
+			}
+			repo := New(db)
+			got, err := repo.GetOrderListByUserID(ctx, userID)
+			require.NoError(t, err)
+			if len(tt.fields) == 0 {
+				assert.Empty(t, got)
+			}
+			for _, field := range tt.fields {
+				if len(got) > 0 {
+					var gotOrder entity.Order
+					gotOrder, got = got[0], got[1:]
+					assert.Equal(t, field.number, gotOrder.Number)
+					assert.Equal(t, field.status, gotOrder.Status)
+					assert.Equal(t, field.accrual, gotOrder.Accrual)
+				} else {
+					assert.Equal(t, userID, notExistedUserID)
+				}
+			}
+		})
+	}
+}

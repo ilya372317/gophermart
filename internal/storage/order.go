@@ -91,3 +91,13 @@ func (d *DBStorage) UpdateOrderAccrualByNumber(ctx context.Context, number int, 
 
 	return nil
 }
+
+func (d *DBStorage) GetOrderListByUserID(ctx context.Context, userID uint) ([]entity.Order, error) {
+	orderList := make([]entity.Order, 0)
+	err := d.db.SelectContext(ctx, &orderList, "SELECT * FROM orders WHERE user_id = $1", userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed get order list by userID: %w", err)
+	}
+
+	return orderList, nil
+}
