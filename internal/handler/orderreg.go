@@ -3,11 +3,14 @@ package handler
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 
-	"github.com/ilya372317/gophermart/internal/dto"
+	"github.com/go-playground/validator/v10"
 	"github.com/ilya372317/gophermart/internal/entity"
 	"github.com/ilya372317/gophermart/internal/logger"
+	"github.com/ilya372317/gophermart/internal/luhnalgo"
 )
 
 type RegisterOrderStorage interface {
@@ -23,18 +26,44 @@ type OrderProcessor interface {
 	ProcessOrder(int)
 }
 
+type RegisterOrderRequest struct {
+	Number int `validate:"required"`
+}
+
+func CreateRegisterOrderFormRequest(r *http.Request) (*RegisterOrderRequest, error) {
+	dto := &RegisterOrderRequest{}
+	content, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed read register order body: %w", err)
+	}
+	if len(content) == 0 {
+		return nil, fmt.Errorf("request body should not be empty")
+	}
+	intNumber, err := strconv.Atoi(string(content))
+	if err != nil {
+		return nil, fmt.Errorf("failed parse order number to int: %w", err)
+	}
+	dto.Number = intNumber
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	if err := validate.Struct(dto); err != nil {
+		return nil, fmt.Errorf("body is invalid: %w", err)
+	}
+
+	return dto, nil
+}
+
 func RegisterOrder(
 	gopherStorage RegisterOrderStorage,
 	orderProcessor OrderProcessor,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
-		registerOrder, err := dto.CreateRegisterOrderFormRequest(request)
+		registerOrder, err := CreateRegisterOrderFormRequest(request)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if !isValidLun(registerOrder.Number) {
+		if !luhnalgo.IsValid(registerOrder.Number) {
 			http.Error(writer, "invalid order number", http.StatusUnprocessableEntity)
 			return
 		}
@@ -84,29 +113,4 @@ func RegisterOrder(
 			logger.Log.Warnf("faield write response: %v", err)
 		}
 	}
-}
-
-func isValidLun(number int) bool {
-	const baseNumber = 10
-	return (number%baseNumber+checksum(number/baseNumber))%baseNumber == 0
-}
-
-func checksum(number int) int {
-	var luhn int
-	const ten, two, zero, nine = 10, 2, 0, 9
-
-	for i := zero; number > zero; i++ {
-		cur := number % ten
-
-		if i%two == zero {
-			cur *= two
-			if cur > nine {
-				cur = cur%ten + cur/ten
-			}
-		}
-
-		luhn += cur
-		number /= ten
-	}
-	return luhn % ten
 }
