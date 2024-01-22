@@ -27,7 +27,7 @@ func New(
 		r.Group(func(r chi.Router) {
 			r.Use(gmiddleware.Auth(gopherConfig, repo))
 			r.Post("/user/orders", handler.RegisterOrder(repo, orderProcessor))
-			r.Get("/user/orders", handler.GetOrderList())
+			r.Get("/user/orders", handler.GetOrderList(repo))
 		})
 	})
 
