@@ -13,8 +13,8 @@ import (
 )
 
 type WithdrawRequest struct {
-	Order string `json:"order" valid:"required,numeric"`
-	Sum   int    `json:"sum" valid:"required"`
+	Order string `json:"order" validate:"required,numeric"`
+	Sum   int    `json:"sum" validate:"required"`
 }
 
 func createWithdrawFromRequest(r *http.Request) (WithdrawRequest, error) {
@@ -23,7 +23,7 @@ func createWithdrawFromRequest(r *http.Request) (WithdrawRequest, error) {
 		return WithdrawRequest{}, fmt.Errorf("failed decode witdraw request body: %w", err)
 	}
 	validate := validator.New(validator.WithRequiredStructEnabled())
-	if err := validate.Struct(dto); err != nil {
+	if err := validate.Struct(&dto); err != nil {
 		return WithdrawRequest{}, fmt.Errorf("invalid request body: %w", err)
 	}
 
