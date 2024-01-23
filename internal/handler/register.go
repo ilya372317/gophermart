@@ -63,15 +63,18 @@ func Register(repo RegisterStorage, gopherConfig *config.GophermartConfig) http.
 		}
 
 		http.SetCookie(writer, &http.Cookie{
-			Name:    "AUTH_TOKEN",
-			Value:   tokenString,
-			Expires: time.Now().Add(tokenExp),
+			Name:     "AUTH_TOKEN",
+			Value:    tokenString,
+			Expires:  time.Now().Add(tokenExp),
+			HttpOnly: true,
+			SameSite: http.SameSiteStrictMode,
+			Path:     "/",
 		})
 
+		writer.WriteHeader(http.StatusOK)
 		if _, err = fmt.Fprint(writer, "Welcome my friend. You was successfully registered"); err != nil {
 			logger.Log.Warnf(failedSendDataErrPattern, err)
 			return
 		}
-		writer.WriteHeader(http.StatusOK)
 	}
 }

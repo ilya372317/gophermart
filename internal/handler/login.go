@@ -54,6 +54,7 @@ func Login(loginStorage LoginStorage, gopherConfig *config.GophermartConfig) htt
 			Value:   token,
 			Expires: time.Now().Add(expTime),
 		})
+		writer.WriteHeader(http.StatusOK)
 		_, err = fmt.Fprint(writer, "you successfully login")
 		if err != nil {
 			logger.Log.Warnf("failed send success login message to client")

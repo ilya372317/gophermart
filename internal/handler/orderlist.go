@@ -57,6 +57,7 @@ func GetOrderList(repo OrderListStorage) http.HandlerFunc {
 			return
 		}
 
+		writer.Header().Set("Content-Type", "application/json")
 		responseList := TransformOrderListToOrderResponseList(orders)
 		response, err := json.Marshal(responseList)
 		if err != nil {
@@ -64,7 +65,6 @@ func GetOrderList(repo OrderListStorage) http.HandlerFunc {
 			return
 		}
 
-		writer.Header().Set("Content-Type", "application/json")
 		writer.WriteHeader(http.StatusOK)
 		if _, err = fmt.Fprint(writer, string(response)); err != nil {
 			logger.Log.Warnf("failed send order data: %v", err)
