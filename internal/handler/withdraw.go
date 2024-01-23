@@ -56,7 +56,7 @@ func WithdrawBonus(repo WithdrawStorage) http.HandlerFunc {
 
 		authUser, ok := request.Context().Value(entity.UserKey).(*entity.User)
 		if !ok {
-			http.Error(writer, "unauthorized", http.StatusInternalServerError)
+			http.Error(writer, errUnauthorized, http.StatusInternalServerError)
 			return
 		}
 		if authUser.Balance < withdrawalRequest.Sum {

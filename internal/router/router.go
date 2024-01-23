@@ -29,6 +29,7 @@ func New(
 			r.Post("/user/balance/withdraw", handler.WithdrawBonus(repo))
 			r.Post("/user/orders", handler.RegisterOrder(repo, orderProcessor))
 			r.Get("/user/orders", handler.GetOrderList(repo))
+			r.Get("/user/withdrawals", handler.WithdrawalList(repo))
 		})
 	})
 

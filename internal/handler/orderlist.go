@@ -44,7 +44,7 @@ func GetOrderList(repo OrderListStorage) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		authUser, ok := request.Context().Value(entity.UserKey).(*entity.User)
 		if !ok {
-			http.Error(writer, "unauthorized", http.StatusInternalServerError)
+			http.Error(writer, errUnauthorized, http.StatusInternalServerError)
 			return
 		}
 		orders, err := repo.GetOrderListByUserID(request.Context(), authUser.ID)
