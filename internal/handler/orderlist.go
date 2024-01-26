@@ -57,7 +57,6 @@ func GetOrderList(repo OrderListStorage) http.HandlerFunc {
 			return
 		}
 
-		writer.Header().Set("Content-Type", "application/json")
 		responseList := TransformOrderListToOrderResponseList(orders)
 		response, err := json.Marshal(responseList)
 		if err != nil {

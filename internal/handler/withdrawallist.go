@@ -58,7 +58,6 @@ func WithdrawalList(repo WithdrawalListStorage) http.HandlerFunc {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		writer.Header().Set("Content-Type", "application/json")
 		if _, err = fmt.Fprint(writer, string(responseString)); err != nil {
 			logger.Log.Error(err.Error())
 		}

@@ -18,6 +18,7 @@ func New(
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(gmiddleware.JSONResponse())
 	r.Route("/api", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(gmiddleware.ShouldHasBody)
