@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/ilya372317/gophermart/internal/auth"
 	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/entity"
 	gmiddleware_mock "github.com/ilya372317/gophermart/internal/gmiddleware/mocks"
@@ -82,7 +83,8 @@ func TestAuth(t *testing.T) {
 			request := httptest.NewRequest(http.MethodPost, "/test-route", nil)
 			if tt.hasAuthCookie {
 				user.SetPassword("password")
-				token, err := user.GenerateJWTToken(tt.clientKey, time.Hour)
+				authService := auth.New(tt.clientKey, time.Second)
+				token, err := authService.GenerateJWTToken(user)
 				require.NoError(t, err)
 				request.AddCookie(&http.Cookie{
 					Name:    "AUTH_TOKEN",

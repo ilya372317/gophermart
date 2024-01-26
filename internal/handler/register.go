@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ilya372317/gophermart/internal/auth"
 	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/dto"
 	"github.com/ilya372317/gophermart/internal/entity"
@@ -56,7 +57,8 @@ func Register(repo RegisterStorage, gopherConfig *config.GophermartConfig) http.
 		}
 
 		tokenExp := time.Hour * time.Duration(gopherConfig.ExpTime)
-		tokenString, err := registeredUser.GenerateJWTToken(gopherConfig.SecretKey, tokenExp)
+		authService := auth.New(gopherConfig.SecretKey, tokenExp)
+		tokenString, err := authService.GenerateJWTToken(registeredUser)
 		if err != nil {
 			http.Error(writer, fmt.Errorf("failed signed token: %w", err).Error(), http.StatusInternalServerError)
 			return

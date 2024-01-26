@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/ilya372317/gophermart/internal/auth"
 	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/entity"
 )
@@ -22,7 +23,7 @@ func Auth(gopherConfig *config.GophermartConfig, authStorage AuthStorage) func(h
 				http.Error(writer, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			claims := &entity.Claims{}
+			claims := &auth.Claims{}
 			token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("unexpected signed method: %w", err)

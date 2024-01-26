@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/ilya372317/gophermart/internal/auth"
 	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/dto"
 	"github.com/ilya372317/gophermart/internal/entity"
@@ -43,7 +44,8 @@ func Login(loginStorage LoginStorage, gopherConfig *config.GophermartConfig) htt
 		}
 
 		expTime := time.Hour * time.Duration(gopherConfig.ExpTime)
-		token, err := user.GenerateJWTToken(gopherConfig.SecretKey, expTime)
+		authService := auth.New(gopherConfig.SecretKey, expTime)
+		token, err := authService.GenerateJWTToken(user)
 		if err != nil {
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
