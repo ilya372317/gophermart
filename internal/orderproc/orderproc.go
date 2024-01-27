@@ -41,11 +41,10 @@ func New(client AccrualClient, repo OrderStorage) *OrderProcessor {
 		Client: client,
 		TaskCh: make(chan func()),
 	}
-	processor.startWorkerPool()
 	return processor
 }
 
-func (o *OrderProcessor) startWorkerPool() {
+func (o *OrderProcessor) StartWorkerPool() {
 	for i := 0; i < poolSize; i++ {
 		go func() {
 			for task := range o.TaskCh {

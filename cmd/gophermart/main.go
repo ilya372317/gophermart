@@ -74,6 +74,7 @@ func run() {
 
 	repo := storage.New(db)
 	orderProcessor := orderproc.New(accrual.New(gophermartConfig.AccrualAddress), repo)
+	orderProcessor.StartWorkerPool()
 
 	server := &http.Server{
 		Addr:    gophermartConfig.Host,
