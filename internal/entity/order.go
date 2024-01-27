@@ -9,6 +9,7 @@ const (
 	StatusProcessing = "PROCESSING"
 	StatusInvalid    = "INVALID"
 	StatusProcessed  = "PROCESSED"
+	StatusNew        = "NEW"
 )
 
 type Order struct {

@@ -54,7 +54,6 @@ func CreateRegisterOrderFormRequest(r *http.Request) (*RegisterOrderRequest, err
 
 func RegisterOrder(
 	gopherStorage RegisterOrderStorage,
-	orderProcessor OrderProcessor,
 ) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		registerOrder, err := CreateRegisterOrderFormRequest(request)
@@ -107,7 +106,6 @@ func RegisterOrder(
 			http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		go orderProcessor.ProcessOrder(newOrder.Number)
 		writer.WriteHeader(http.StatusAccepted)
 		if _, err := fmt.Fprint(writer, "order registered"); err != nil {
 			logger.Log.Warnf("faield write response: %v", err)

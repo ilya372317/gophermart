@@ -101,3 +101,12 @@ func (d *DBStorage) GetOrderListByUserID(ctx context.Context, userID uint) ([]en
 
 	return orderList, nil
 }
+
+func (d *DBStorage) GetOrderListByStatus(ctx context.Context, status string) ([]entity.Order, error) {
+	orderList := make([]entity.Order, 0)
+	if err := d.db.SelectContext(ctx,
+		&orderList, "SELECT * FROM orders WHERE status = $1", status); err != nil {
+		return nil, fmt.Errorf("failed get order list by status: %w", err)
+	}
+	return orderList, nil
+}

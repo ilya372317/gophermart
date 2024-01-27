@@ -164,7 +164,7 @@ func TestRegisterOrder(t *testing.T) {
 				"/api/user/orders", bytes.NewReader([]byte(tt.argument)))
 			request = request.WithContext(requestContext)
 			writer := httptest.NewRecorder()
-			handler := RegisterOrder(repo, orderProcessor)
+			handler := RegisterOrder(repo)
 			handler.ServeHTTP(writer, request)
 
 			res := writer.Result()

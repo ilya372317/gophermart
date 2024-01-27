@@ -592,3 +592,130 @@ func TestDBStorage_GetOrderListByUserID(t *testing.T) {
 		})
 	}
 }
+
+func TestDBStorage_GetOrderListByStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		argument string
+		fields   []orderFields
+		want     []orderFields
+	}{
+		{
+			name:     "success case with order status equals NEW",
+			argument: entity.StatusNew,
+			fields: []orderFields{
+				{
+					number: 123,
+					accrual: sql.NullInt64{
+						Int64: 100,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+				{
+					number: 321,
+					accrual: sql.NullInt64{
+						Int64: 200,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+				{
+					number: 456,
+					accrual: sql.NullInt64{
+						Int64: 300,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+			},
+			want: []orderFields{
+				{
+					number: 123,
+					accrual: sql.NullInt64{
+						Int64: 100,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+				{
+					number: 321,
+					accrual: sql.NullInt64{
+						Int64: 200,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+				{
+					number: 456,
+					accrual: sql.NullInt64{
+						Int64: 300,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+			},
+		},
+		{
+			name:     "not all status equal to argument",
+			argument: entity.StatusNew,
+			fields: []orderFields{
+				{
+					number: 123,
+					accrual: sql.NullInt64{
+						Int64: 100,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+				{
+					number: 321,
+					accrual: sql.NullInt64{
+						Int64: 200,
+						Valid: true,
+					},
+					status: entity.StatusInvalid,
+				},
+			},
+			want: []orderFields{
+				{
+					number: 123,
+					accrual: sql.NullInt64{
+						Int64: 100,
+						Valid: true,
+					},
+					status: entity.StatusNew,
+				},
+			},
+		},
+		{
+			name:     "case with empty storage",
+			argument: entity.StatusNew,
+			fields:   nil,
+			want:     nil,
+		},
+	}
+	ctx := context.Background()
+	clearUsersTable(ctx, t)
+	userID := createTestUser(ctx, t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearOrdersTable(ctx, t)
+			fillOrdersTable(ctx, t, tt.fields, userID)
+			repo := New(db)
+			got, err := repo.GetOrderListByStatus(ctx, tt.argument)
+			require.NoError(t, err)
+			var want orderFields
+			for _, gotOrder := range got {
+				if len(tt.want) == 0 {
+					t.Error("invalid want argument in test")
+					return
+				}
+				want, tt.want = tt.want[0], tt.want[1:]
+				assert.Equal(t, want.status, gotOrder.Status)
+				assert.Equal(t, want.number, gotOrder.Number)
+				assert.Equal(t, want.accrual, gotOrder.Accrual)
+			}
+		})
+	}
+}

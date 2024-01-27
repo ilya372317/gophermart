@@ -23,6 +23,7 @@ type OrderStorage interface {
 	UpdateUserBalanceByID(context.Context, uint, int) error
 	GetUserByID(context.Context, uint) (*entity.User, error)
 	UpdateOrderAccrualByNumber(context.Context, int, sql.NullInt64) error
+	GetOrderListByStatus(ctx context.Context, status string) ([]entity.Order, error)
 }
 
 type AccrualClient interface {
@@ -47,8 +48,19 @@ func New(client AccrualClient, repo OrderStorage) *OrderProcessor {
 func (o *OrderProcessor) StartWorkerPool() {
 	for i := 0; i < poolSize; i++ {
 		go func() {
-			for task := range o.TaskCh {
-				task()
+			for {
+				task, ok := <-o.TaskCh
+				if !ok {
+					return
+				}
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							logger.Log.Errorf("panic in order processor: %v", r)
+						}
+					}()
+					task()
+				}()
 			}
 		}()
 	}
@@ -140,14 +152,38 @@ func (o *OrderProcessor) processOrder(ctx context.Context, number int) error {
 	return nil
 }
 
-func (o *OrderProcessor) ProcessOrder(number int) {
+func (o *OrderProcessor) registerProcessOrderTask(ctx context.Context, number int) {
 	f := func() {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-		defer cancel()
 		if err := o.processOrder(ctx, number); err != nil {
-			logger.Log.Warnf("failed process order: %v", err)
+			logger.Log.Infof("failed process order [%d]: %v", number, err)
 			return
 		}
 	}
 	o.TaskCh <- f
+}
+
+func (o *OrderProcessor) SupervisingOrders(ctx context.Context) {
+	timer := time.NewTicker(time.Second)
+	for range timer.C {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			if err := o.supervisingOrders(ctx); err != nil {
+				logger.Log.Errorf("failed get orders for processing: %v", err)
+			}
+		}
+	}
+}
+
+func (o *OrderProcessor) supervisingOrders(ctx context.Context) error {
+	orderList, err := o.Repo.GetOrderListByStatus(ctx, entity.StatusNew)
+	if err != nil {
+		return fmt.Errorf("failed get processed orders: %w", err)
+	}
+	for _, order := range orderList {
+		o.registerProcessOrderTask(ctx, order.Number)
+	}
+
+	return nil
 }

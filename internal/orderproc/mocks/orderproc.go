@@ -52,6 +52,21 @@ func (mr *MockOrderStorageMockRecorder) GetOrderByNumber(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderByNumber", reflect.TypeOf((*MockOrderStorage)(nil).GetOrderByNumber), arg0, arg1)
 }
 
+// GetOrderListByStatus mocks base method.
+func (m *MockOrderStorage) GetOrderListByStatus(ctx context.Context, status string) ([]entity.Order, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetOrderListByStatus", ctx, status)
+	ret0, _ := ret[0].([]entity.Order)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetOrderListByStatus indicates an expected call of GetOrderListByStatus.
+func (mr *MockOrderStorageMockRecorder) GetOrderListByStatus(ctx, status interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOrderListByStatus", reflect.TypeOf((*MockOrderStorage)(nil).GetOrderListByStatus), ctx, status)
+}
+
 // GetUserByID mocks base method.
 func (m *MockOrderStorage) GetUserByID(arg0 context.Context, arg1 uint) (*entity.User, error) {
 	m.ctrl.T.Helper()
