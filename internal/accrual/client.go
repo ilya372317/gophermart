@@ -20,7 +20,7 @@ type Client struct {
 
 func New(accrualHost string) *Client {
 	return &Client{
-		c: resty.New().SetBaseURL("http://" + accrualHost),
+		c: resty.New().SetBaseURL(accrualHost),
 	}
 }
 
