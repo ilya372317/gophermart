@@ -68,7 +68,7 @@ func RegisterOrder(
 		}
 		authUser, exists := request.Context().Value(entity.UserKey).(*entity.User)
 		if !exists {
-			http.Error(writer, errUnauthorized, http.StatusUnauthorized)
+			http.Error(writer, errUnauthorized, http.StatusInternalServerError)
 			return
 		}
 
