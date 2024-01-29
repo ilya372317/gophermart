@@ -50,7 +50,7 @@ func (mr *MockWithdrawStorageMockRecorder) SaveWithdrawal(arg0, arg1 interface{}
 }
 
 // UpdateUserBalanceByID mocks base method.
-func (m *MockWithdrawStorage) UpdateUserBalanceByID(arg0 context.Context, arg1 uint, arg2 int) error {
+func (m *MockWithdrawStorage) UpdateUserBalanceByID(arg0 context.Context, arg1 uint, arg2 float64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserBalanceByID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

@@ -29,15 +29,15 @@ func (d *DBStorage) GetWithdrawalListByUserID(ctx context.Context, userID uint) 
 	return withdrawals, nil
 }
 
-func (d *DBStorage) GetWithdrawalSumByUserID(ctx context.Context, userID uint) (int, error) {
-	var result sql.NullInt64
+func (d *DBStorage) GetWithdrawalSumByUserID(ctx context.Context, userID uint) (float64, error) {
+	var result sql.NullFloat64
 	err := d.db.GetContext(ctx, &result, "SELECT SUM(sum) FROM withdrawals WHERE user_id = $1", userID)
 	if err != nil {
 		return 0, fmt.Errorf("failed get sum of withdrawals by user id: %w", err)
 	}
 
 	if result.Valid {
-		return int(result.Int64), nil
+		return result.Float64, nil
 	} else {
 		return 0, nil
 	}

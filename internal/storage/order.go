@@ -74,7 +74,7 @@ func (d *DBStorage) UpdateOrderStatusByNumber(ctx context.Context, number int, s
 	return nil
 }
 
-func (d *DBStorage) UpdateOrderAccrualByNumber(ctx context.Context, number int, accrual sql.NullInt64) error {
+func (d *DBStorage) UpdateOrderAccrualByNumber(ctx context.Context, number int, accrual sql.NullFloat64) error {
 	res, err := d.db.ExecContext(ctx, "UPDATE orders SET accrual = $1 WHERE number = $2", accrual, number)
 	if err != nil {
 		return fmt.Errorf("failed update oreder accrual: %w", err)

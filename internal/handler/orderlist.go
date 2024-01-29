@@ -20,7 +20,7 @@ type OrderResponse struct {
 	UploadedAt time.Time `json:"uploaded_at"`
 	Number     string    `json:"number"`
 	Status     string    `json:"status"`
-	Accrual    int64     `json:"accrual,omitempty"`
+	Accrual    float64   `json:"accrual,omitempty"`
 }
 
 func TransformOrderListToOrderResponseList(orderList []entity.Order) []OrderResponse {
@@ -32,7 +32,7 @@ func TransformOrderListToOrderResponseList(orderList []entity.Order) []OrderResp
 			UploadedAt: order.CreatedAT,
 		}
 		if order.Accrual.Valid {
-			response.Accrual = order.Accrual.Int64
+			response.Accrual = order.Accrual.Float64
 		}
 		responseList = append(responseList, response)
 	}

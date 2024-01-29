@@ -12,7 +12,7 @@ import (
 
 type orderFields struct {
 	number  int `db:"number"`
-	accrual sql.NullInt64
+	accrual sql.NullFloat64
 	status  string
 }
 
@@ -243,7 +243,7 @@ func TestDBStorage_GetOrderByNumber(t *testing.T) {
 	type want struct {
 		number  int
 		status  string
-		accrual sql.NullInt64
+		accrual sql.NullFloat64
 	}
 	tests := []struct {
 		name     string
@@ -258,9 +258,9 @@ func TestDBStorage_GetOrderByNumber(t *testing.T) {
 			fields: []orderFields{
 				{
 					number: 123,
-					accrual: sql.NullInt64{
-						Int64: 123,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 123,
+						Valid:   true,
 					},
 					status: "INVALID",
 				},
@@ -268,9 +268,9 @@ func TestDBStorage_GetOrderByNumber(t *testing.T) {
 			want: want{
 				number: 123,
 				status: "INVALID",
-				accrual: sql.NullInt64{
-					Int64: 123,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 123,
+					Valid:   true,
 				},
 			},
 			wantErr: false,
@@ -407,7 +407,7 @@ func TestDBStorage_UpdateOrderStatusByNumber(t *testing.T) {
 func TestDBStorage_UpdateOrderAccrualByNumber(t *testing.T) {
 	type argument struct {
 		number  int
-		accrual sql.NullInt64
+		accrual sql.NullFloat64
 	}
 	tests := []struct {
 		name     string
@@ -419,17 +419,17 @@ func TestDBStorage_UpdateOrderAccrualByNumber(t *testing.T) {
 			name: "success case",
 			field: orderFields{
 				number: 123,
-				accrual: sql.NullInt64{
-					Int64: 10,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 10,
+					Valid:   true,
 				},
 			},
 			wantErr: false,
 			argument: argument{
 				number: 123,
-				accrual: sql.NullInt64{
-					Int64: 20,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 20,
+					Valid:   true,
 				},
 			},
 		},
@@ -437,17 +437,17 @@ func TestDBStorage_UpdateOrderAccrualByNumber(t *testing.T) {
 			name: "no rows was updated case",
 			field: orderFields{
 				number: 321,
-				accrual: sql.NullInt64{
-					Int64: 10,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 10,
+					Valid:   true,
 				},
 			},
 			wantErr: true,
 			argument: argument{
 				number: 123,
-				accrual: sql.NullInt64{
-					Int64: 123,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 123,
+					Valid:   true,
 				},
 			},
 		},
@@ -459,9 +459,9 @@ func TestDBStorage_UpdateOrderAccrualByNumber(t *testing.T) {
 			wantErr: false,
 			argument: argument{
 				number: 123,
-				accrual: sql.NullInt64{
-					Int64: 10,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 10,
+					Valid:   true,
 				},
 			},
 		},
@@ -469,9 +469,9 @@ func TestDBStorage_UpdateOrderAccrualByNumber(t *testing.T) {
 			name: "update order accrual from value to null",
 			field: orderFields{
 				number: 123,
-				accrual: sql.NullInt64{
-					Int64: 123,
-					Valid: true,
+				accrual: sql.NullFloat64{
+					Float64: 123,
+					Valid:   true,
 				},
 			},
 			wantErr: false,
@@ -516,25 +516,25 @@ func TestDBStorage_GetOrderListByUserID(t *testing.T) {
 	defaultOrderFields := []orderFields{
 		{
 			number: 123,
-			accrual: sql.NullInt64{
-				Int64: 10,
-				Valid: true,
+			accrual: sql.NullFloat64{
+				Float64: 10,
+				Valid:   true,
 			},
 			status: "INVALID",
 		},
 		{
 			number: 321,
-			accrual: sql.NullInt64{
-				Int64: 0,
-				Valid: false,
+			accrual: sql.NullFloat64{
+				Float64: 0,
+				Valid:   false,
 			},
 			status: "PROCESSED",
 		},
 		{
 			number: 567,
-			accrual: sql.NullInt64{
-				Int64: 30,
-				Valid: true,
+			accrual: sql.NullFloat64{
+				Float64: 30,
+				Valid:   true,
 			},
 			status: "PROCESSING",
 		},
@@ -606,25 +606,25 @@ func TestDBStorage_GetOrderListByStatus(t *testing.T) {
 			fields: []orderFields{
 				{
 					number: 123,
-					accrual: sql.NullInt64{
-						Int64: 100,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 100,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
 				{
 					number: 321,
-					accrual: sql.NullInt64{
-						Int64: 200,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 200,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
 				{
 					number: 456,
-					accrual: sql.NullInt64{
-						Int64: 300,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 300,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
@@ -632,25 +632,25 @@ func TestDBStorage_GetOrderListByStatus(t *testing.T) {
 			want: []orderFields{
 				{
 					number: 123,
-					accrual: sql.NullInt64{
-						Int64: 100,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 100,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
 				{
 					number: 321,
-					accrual: sql.NullInt64{
-						Int64: 200,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 200,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
 				{
 					number: 456,
-					accrual: sql.NullInt64{
-						Int64: 300,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 300,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
@@ -662,17 +662,17 @@ func TestDBStorage_GetOrderListByStatus(t *testing.T) {
 			fields: []orderFields{
 				{
 					number: 123,
-					accrual: sql.NullInt64{
-						Int64: 100,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 100,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},
 				{
 					number: 321,
-					accrual: sql.NullInt64{
-						Int64: 200,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 200,
+						Valid:   true,
 					},
 					status: entity.StatusInvalid,
 				},
@@ -680,9 +680,9 @@ func TestDBStorage_GetOrderListByStatus(t *testing.T) {
 			want: []orderFields{
 				{
 					number: 123,
-					accrual: sql.NullInt64{
-						Int64: 100,
-						Valid: true,
+					accrual: sql.NullFloat64{
+						Float64: 100,
+						Valid:   true,
 					},
 					status: entity.StatusNew,
 				},

@@ -11,7 +11,7 @@ import (
 
 type withdrawalFields struct {
 	order int
-	sum   int
+	sum   float64
 }
 
 func TestDBStorage_SaveWithdrawal(t *testing.T) {
@@ -171,7 +171,7 @@ func TestDBStorage_GetWithdrawalSumByUserID(t *testing.T) {
 	tests := []struct {
 		name   string
 		fields []withdrawalFields
-		want   int
+		want   float64
 	}{
 		{
 			name: "success case with multiply items",

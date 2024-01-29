@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users
     id         BIGSERIAL PRIMARY KEY NOT NULL,
     login      TEXT                  NOT NULL UNIQUE,
     password   bytea                 NOT NULL,
-    balance    BIGINT                   DEFAULT 0,
+    balance    DOUBLE PRECISION DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

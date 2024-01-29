@@ -11,12 +11,12 @@ import (
 )
 
 type UserBalanceStorage interface {
-	GetWithdrawalSumByUserID(context.Context, uint) (int, error)
+	GetWithdrawalSumByUserID(context.Context, uint) (float64, error)
 }
 
 type UserBalanceResponse struct {
 	Current   float64 `json:"current"`
-	Withdrawn int     `json:"withdrawn"`
+	Withdrawn float64 `json:"withdrawn"`
 }
 
 func GetUserBalance(repo UserBalanceStorage) http.HandlerFunc {
@@ -32,7 +32,7 @@ func GetUserBalance(repo UserBalanceStorage) http.HandlerFunc {
 			return
 		}
 		response := UserBalanceResponse{
-			Current:   float64(authUser.Balance),
+			Current:   authUser.Balance,
 			Withdrawn: withdrawalSum,
 		}
 		responseContent, err := json.Marshal(&response)

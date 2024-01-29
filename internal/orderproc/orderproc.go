@@ -18,9 +18,9 @@ const setInvalidStatusErrPattern = "failed set invalid status to order: %w"
 type OrderStorage interface {
 	UpdateOrderStatusByNumber(context.Context, int, string) error
 	GetOrderByNumber(context.Context, int) (*entity.Order, error)
-	UpdateUserBalanceByID(context.Context, uint, int) error
+	UpdateUserBalanceByID(context.Context, uint, float64) error
 	GetUserByID(context.Context, uint) (*entity.User, error)
-	UpdateOrderAccrualByNumber(context.Context, int, sql.NullInt64) error
+	UpdateOrderAccrualByNumber(context.Context, int, sql.NullFloat64) error
 	GetOrderListByStatus(ctx context.Context, status string) ([]entity.Order, error)
 }
 
@@ -133,9 +133,9 @@ func (o *OrderProcessor) processOrder(ctx context.Context, gopherConfig *config.
 	}
 
 	if calculationResponse.Accrual > 0 {
-		if err := o.Repo.UpdateOrderAccrualByNumber(ctx, number, sql.NullInt64{
-			Int64: int64(calculationResponse.Accrual),
-			Valid: true,
+		if err := o.Repo.UpdateOrderAccrualByNumber(ctx, number, sql.NullFloat64{
+			Float64: calculationResponse.Accrual,
+			Valid:   true,
 		}); err != nil {
 			if err := o.Repo.UpdateOrderStatusByNumber(ctx, number, entity.StatusInvalid); err != nil {
 				return fmt.Errorf(setInvalidStatusErrPattern, err)

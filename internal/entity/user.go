@@ -16,7 +16,7 @@ type User struct {
 	Login     string    `db:"login"`
 	Password  string    `db:"password"`
 	ID        uint      `db:"id"`
-	Balance   int       `db:"balance"`
+	Balance   float64   `db:"balance"`
 }
 
 func (u *User) SetPassword(pass string) {

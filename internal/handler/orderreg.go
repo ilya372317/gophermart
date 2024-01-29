@@ -19,7 +19,7 @@ type RegisterOrderStorage interface {
 	SaveOrder(context.Context, *entity.Order) error
 	UpdateOrderStatusByNumber(context.Context, int, string) error
 	GetOrderByNumber(context.Context, int) (*entity.Order, error)
-	UpdateUserBalanceByID(ctx context.Context, id uint, balance int) error
+	UpdateUserBalanceByID(context.Context, uint, float64) error
 }
 
 type OrderProcessor interface {

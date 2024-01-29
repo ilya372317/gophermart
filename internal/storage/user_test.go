@@ -370,7 +370,7 @@ func TestDBStorage_UpdateUserBalanceByID(t *testing.T) {
 	tests := []struct {
 		field        userFields
 		name         string
-		argument     int
+		argument     float64
 		wantErr      bool
 		userIDExists bool
 	}{

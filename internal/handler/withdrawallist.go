@@ -15,7 +15,7 @@ import (
 type WithdrawalResponse struct {
 	ProcessedAT time.Time `json:"processed_at"`
 	Order       string    `json:"order"`
-	Sum         int       `json:"sum"`
+	Sum         float64   `json:"sum"`
 }
 
 func transformWithdrawalsToResponse(withdrawals []entity.Withdrawal) []WithdrawalResponse {

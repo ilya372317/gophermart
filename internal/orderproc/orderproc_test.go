@@ -53,9 +53,9 @@ func TestOrderProcessor_SendRequestToAccrualReturnErr(t *testing.T) {
 func TestOrderProcessor_ProcessOrderSuccessCase(t *testing.T) {
 	const userID = uint(1)
 	const userBalance = 10
-	const accrualResponseAmount = 10
+	const accrualResponseAmount = float64(10)
 	const orderID = 1
-	const bonusToSet = 20
+	const bonusToSet = float64(20)
 	argument := 123
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
@@ -78,9 +78,9 @@ func TestOrderProcessor_ProcessOrderSuccessCase(t *testing.T) {
 			UpdatedAT: time.Now(),
 			Status:    "PROCESSING",
 			Number:    argument,
-			Accrual: sql.NullInt64{
-				Int64: 0,
-				Valid: false,
+			Accrual: sql.NullFloat64{
+				Float64: 0,
+				Valid:   false,
 			},
 			ID:     orderID,
 			UserID: userID,
@@ -94,9 +94,9 @@ func TestOrderProcessor_ProcessOrderSuccessCase(t *testing.T) {
 		Balance:   userBalance,
 	}, nil).MinTimes(1)
 	strg.EXPECT().UpdateUserBalanceByID(ctx, userID, bonusToSet).Return(nil).MinTimes(1)
-	strg.EXPECT().UpdateOrderAccrualByNumber(ctx, argument, sql.NullInt64{
-		Int64: int64(accrualResponseAmount),
-		Valid: true,
+	strg.EXPECT().UpdateOrderAccrualByNumber(ctx, argument, sql.NullFloat64{
+		Float64: accrualResponseAmount,
+		Valid:   true,
 	}).Return(nil).MinTimes(1)
 	strg.EXPECT().UpdateOrderStatusByNumber(ctx, argument, entity.StatusProcessed).Return(nil).MinTimes(1)
 	o := New(client, strg)

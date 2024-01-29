@@ -83,7 +83,7 @@ func (mr *MockOrderStorageMockRecorder) GetUserByID(arg0, arg1 interface{}) *gom
 }
 
 // UpdateOrderAccrualByNumber mocks base method.
-func (m *MockOrderStorage) UpdateOrderAccrualByNumber(arg0 context.Context, arg1 int, arg2 sql.NullInt64) error {
+func (m *MockOrderStorage) UpdateOrderAccrualByNumber(arg0 context.Context, arg1 int, arg2 sql.NullFloat64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateOrderAccrualByNumber", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
@@ -111,7 +111,7 @@ func (mr *MockOrderStorageMockRecorder) UpdateOrderStatusByNumber(arg0, arg1, ar
 }
 
 // UpdateUserBalanceByID mocks base method.
-func (m *MockOrderStorage) UpdateUserBalanceByID(arg0 context.Context, arg1 uint, arg2 int) error {
+func (m *MockOrderStorage) UpdateUserBalanceByID(arg0 context.Context, arg1 uint, arg2 float64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateUserBalanceByID", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)

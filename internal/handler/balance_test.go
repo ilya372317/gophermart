@@ -17,7 +17,7 @@ import (
 
 func TestGetUserBalance(t *testing.T) {
 	type repoReturnValue struct {
-		value int
+		value float64
 		err   error
 	}
 	type want struct {

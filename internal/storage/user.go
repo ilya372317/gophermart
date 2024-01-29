@@ -59,7 +59,7 @@ func (d *DBStorage) HasUser(ctx context.Context, login string) (bool, error) {
 	return true, nil
 }
 
-func (d *DBStorage) UpdateUserBalanceByID(ctx context.Context, id uint, balance int) error {
+func (d *DBStorage) UpdateUserBalanceByID(ctx context.Context, id uint, balance float64) error {
 	res, err := d.db.ExecContext(ctx,
 		"UPDATE users SET balance = $1 WHERE id = $2", balance, id)
 	if err != nil {

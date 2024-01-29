@@ -13,8 +13,8 @@ import (
 )
 
 type WithdrawRequest struct {
-	Order string `json:"order" validate:"required,numeric"`
-	Sum   int    `json:"sum" validate:"required"`
+	Order string  `json:"order" validate:"required,numeric"`
+	Sum   float64 `json:"sum" validate:"required"`
 }
 
 func createWithdrawFromRequest(r *http.Request) (WithdrawRequest, error) {
@@ -31,7 +31,7 @@ func createWithdrawFromRequest(r *http.Request) (WithdrawRequest, error) {
 }
 
 type WithdrawStorage interface {
-	UpdateUserBalanceByID(context.Context, uint, int) error
+	UpdateUserBalanceByID(context.Context, uint, float64) error
 	SaveWithdrawal(context.Context, entity.Withdrawal) error
 }
 

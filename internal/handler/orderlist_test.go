@@ -42,9 +42,9 @@ func TestGetOrderList(t *testing.T) {
 					UpdatedAT: now,
 					Status:    entity.StatusInvalid,
 					Number:    123,
-					Accrual: sql.NullInt64{
-						Int64: 123,
-						Valid: true,
+					Accrual: sql.NullFloat64{
+						Float64: 123,
+						Valid:   true,
 					},
 					ID:     1,
 					UserID: userID,

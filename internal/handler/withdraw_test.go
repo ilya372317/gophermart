@@ -30,8 +30,8 @@ func TestWithdrawBonus(t *testing.T) {
 		saveWithdrawalReturnErr    bool
 	}
 	type body struct {
-		Order string `json:"order,omitempty"`
-		Sum   int    `json:"sum,omitempty"`
+		Order string  `json:"order,omitempty"`
+		Sum   float64 `json:"sum,omitempty"`
 	}
 	tests := []struct {
 		repoState repoState

@@ -6,7 +6,7 @@ CREATE TABLE orders
     user_id    BIGINT                                             NOT NULL REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
     status     ORDER_STATUS             DEFAULT ('NEW')           NOT NULL,
     number     BIGINT                                             NOT NULL UNIQUE,
-    accrual    BIGINT,
+    accrual    DOUBLE PRECISION,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
