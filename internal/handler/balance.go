@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 )
 
 type UserBalanceStorage interface {
+	GetWithdrawalSumByUserID(context.Context, uint) (int, error)
 }
 
 type UserBalanceResponse struct {
@@ -24,11 +26,14 @@ func GetUserBalance(repo UserBalanceStorage) http.HandlerFunc {
 			http.Error(writer, "failed get auth user from request", http.StatusInternalServerError)
 			return
 		}
-		// 2.get withdrawals sum from storage
-		// 3.get balance from auth user
+		withdrawalSum, err := repo.GetWithdrawalSumByUserID(request.Context(), authUser.ID)
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		response := UserBalanceResponse{
 			Current:   float64(authUser.Balance),
-			Withdrawn: 0,
+			Withdrawn: withdrawalSum,
 		}
 		responseContent, err := json.Marshal(&response)
 		if err != nil {

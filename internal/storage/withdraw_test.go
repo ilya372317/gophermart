@@ -166,3 +166,58 @@ func clearWithdrawalTable(ctx context.Context, t *testing.T) {
 	_, err := db.ExecContext(ctx, "DELETE FROM withdrawals")
 	require.NoError(t, err)
 }
+
+func TestDBStorage_GetWithdrawalSumByUserID(t *testing.T) {
+	tests := []struct {
+		name   string
+		fields []withdrawalFields
+		want   int
+	}{
+		{
+			name: "success case with multiply items",
+			fields: []withdrawalFields{
+				{
+					order: 123,
+					sum:   10,
+				},
+				{
+					order: 321,
+					sum:   20,
+				},
+				{
+					order: 456,
+					sum:   20,
+				},
+			},
+			want: 50,
+		},
+		{
+			name: "success case with one item",
+			fields: []withdrawalFields{
+				{
+					order: 123,
+					sum:   10,
+				},
+			},
+			want: 10,
+		},
+		{
+			name:   "empty case",
+			fields: nil,
+			want:   0,
+		},
+	}
+	ctx := context.Background()
+	clearUsersTable(ctx, t)
+	userID := createTestUser(ctx, t)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			clearWithdrawalTable(ctx, t)
+			fillWithdrawalTable(ctx, t, tt.fields, userID)
+			repo := New(db)
+			got, err := repo.GetWithdrawalSumByUserID(ctx, userID)
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
