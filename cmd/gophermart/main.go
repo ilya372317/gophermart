@@ -141,7 +141,7 @@ func runAccrual(gopherConfig *config.GophermartConfig) (*exec.Cmd, error) {
 	case "arm64":
 		binaryFile = "accrual_darwin_arm64"
 	case "amd64":
-		binaryFile = "accrual_linux_amd_64"
+		binaryFile = "accrual_linux_amd64"
 	default:
 		binaryFile = "accrual_windows_amd64"
 	}
