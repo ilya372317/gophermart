@@ -45,7 +45,7 @@ func New(client AccrualClient, repo OrderStorage) *OrderProcessor {
 	return processor
 }
 
-func (o *OrderProcessor) StartWorkerPool() {
+func (o *OrderProcessor) Start() {
 	for i := 0; i < poolSize; i++ {
 		go func() {
 			for {
