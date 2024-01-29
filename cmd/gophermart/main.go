@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -23,11 +24,16 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-const logPath = "./log.txt"
-const envPath = "./.env"
-const migrationPath = "db/migrations"
+const logPath = "/log.txt"
+const envPath = "/.env"
+const migrationPath = "/db/migrations"
 const secondsForFinishRequests = 5
 const secondsForWaitAccrualStopping = 5
+
+var (
+	_, b, _, _ = runtime.Caller(0)
+	root       = filepath.Join(filepath.Dir(b), "../..")
+)
 
 func main() {
 	run()
@@ -36,11 +42,11 @@ func main() {
 func run() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
-	logErr := logger.Initialize(logPath)
+	logErr := logger.Initialize(root + logPath)
 	if logErr != nil {
 		log.Println("failed init logger")
 	}
-	if err := godotenv.Load(envPath); err != nil {
+	if err := godotenv.Load(root + envPath); err != nil {
 		logger.Log.Warnf("failed load enviroment viarable from .env: %v", err)
 	}
 
@@ -55,7 +61,7 @@ func run() {
 		logger.Log.Fatalf("failed open database connection: %v", err)
 		return
 	}
-	if err := dbmanager.RunMigrations(db.DB, migrationPath); err != nil {
+	if err := dbmanager.RunMigrations(db.DB, root+migrationPath); err != nil {
 		logger.Log.Fatalf("failed run migrations: %v", err)
 		return
 	}
@@ -159,7 +165,7 @@ func runAccrual(gopherConfig *config.GophermartConfig) (*exec.Cmd, error) {
 		return nil, fmt.Errorf("unsupported platform: OS %s, ARCH %s", runtime.GOOS, runtime.GOARCH)
 	}
 
-	command := "cmd/accrual/" + binaryFile
+	command := root + "/cmd/accrual/" + binaryFile
 	cmd := exec.Command(command, "-a", gopherConfig.AccrualAddress)
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed start accraul service: %w", err)
