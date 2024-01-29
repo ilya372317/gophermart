@@ -49,6 +49,7 @@ func run() {
 	}
 
 	gophermartConfig, err := config.New()
+	logger.Log.Info(gophermartConfig)
 	if err != nil {
 		logger.Log.Fatalf("failed create config: %v", err)
 		return
