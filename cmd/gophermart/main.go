@@ -79,7 +79,7 @@ func run() {
 
 	server := &http.Server{
 		Addr:    gophermartConfig.Host,
-		Handler: router.New(repo, gophermartConfig, orderProcessor),
+		Handler: router.New(repo, gophermartConfig),
 	}
 
 	g := &errgroup.Group{}
