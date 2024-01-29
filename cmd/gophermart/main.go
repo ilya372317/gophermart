@@ -137,13 +137,26 @@ func runServer(server *http.Server, host string) error {
 
 func runAccrual(gopherConfig *config.GophermartConfig) (*exec.Cmd, error) {
 	var binaryFile string
-	switch runtime.GOARCH {
-	case "arm64":
-		binaryFile = "accrual_darwin_arm64"
-	case "amd64":
-		binaryFile = "accrual_linux_amd64"
-	default:
-		binaryFile = "accrual_windows_amd64"
+	switch runtime.GOOS {
+	case "darwin":
+		switch runtime.GOARCH {
+		case "arm64":
+			binaryFile = "accrual_darwin_arm64"
+		case "amd64":
+			binaryFile = "accrual_darwin_amd64"
+		}
+	case "linux":
+		if runtime.GOARCH == "amd64" {
+			binaryFile = "accrual_linux_amd64"
+		}
+	case "windows":
+		if runtime.GOARCH == "amd64" {
+			binaryFile = "accrual_windows_amd64"
+		}
+	}
+
+	if len(binaryFile) == 0 {
+		return nil, fmt.Errorf("unsupported platform: OS %s, ARCH %s", runtime.GOOS, runtime.GOARCH)
 	}
 
 	command := "cmd/accrual/" + binaryFile
