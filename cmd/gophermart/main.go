@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
@@ -28,7 +27,6 @@ const logPath = "/log.txt"
 const envPath = "/.env"
 const migrationPath = "/db/migrations"
 const secondsForFinishRequests = 5
-const secondsForWaitAccrualStopping = 5
 
 var (
 	_, b, _, _ = runtime.Caller(0)
@@ -72,12 +70,6 @@ func run() {
 		}
 	}()
 
-	accrualCommand, err := runAccrual(gophermartConfig)
-	if err != nil {
-		logger.Log.Fatalf("failed start accrual: %v", err)
-		return
-	}
-
 	repo := storage.New(db)
 	orderProcessor := orderproc.New(accrual.New(gophermartConfig.AccrualAddress), repo)
 	orderProcessor.Start(gophermartConfig)
@@ -96,10 +88,6 @@ func run() {
 		<-ctx.Done()
 		return shutdownServer(server)
 	})
-	g.Go(func() error {
-		<-ctx.Done()
-		return stopAccrual(accrualCommand)
-	})
 
 	if err = g.Wait(); err != nil {
 		logger.Log.Warnf("server shutdown with err: %v", err)
@@ -115,20 +103,6 @@ func shutdownServer(server *http.Server) error {
 	return nil
 }
 
-func stopAccrual(cmd *exec.Cmd) error {
-	logger.Log.Info("stopping accrual system...")
-	if err := cmd.Process.Signal(syscall.SIGTERM); err != nil {
-		return fmt.Errorf("failed to send termination signal to accrual system: %w", err)
-	}
-	time.Sleep(secondsForWaitAccrualStopping * time.Second)
-	if err := cmd.Process.Kill(); err != nil {
-		return fmt.Errorf("failed to kill accrual system: %w", err)
-	}
-	logger.Log.Info("accrual stopped.")
-
-	return nil
-}
-
 func runServer(server *http.Server, host string) error {
 	logger.Log.Infof("server is starting at host: [%s]...", host)
 	if err := server.ListenAndServe(); err != nil {
@@ -139,37 +113,4 @@ func runServer(server *http.Server, host string) error {
 		return fmt.Errorf("failed start server: %w", err)
 	}
 	return nil
-}
-
-func runAccrual(gopherConfig *config.GophermartConfig) (*exec.Cmd, error) {
-	var binaryFile string
-	switch runtime.GOOS {
-	case "darwin":
-		switch runtime.GOARCH {
-		case "arm64":
-			binaryFile = "accrual_darwin_arm64"
-		case "amd64":
-			binaryFile = "accrual_darwin_amd64"
-		}
-	case "linux":
-		if runtime.GOARCH == "amd64" {
-			binaryFile = "accrual_linux_amd64"
-		}
-	case "windows":
-		if runtime.GOARCH == "amd64" {
-			binaryFile = "accrual_windows_amd64"
-		}
-	}
-
-	if len(binaryFile) == 0 {
-		return nil, fmt.Errorf("unsupported platform: OS %s, ARCH %s", runtime.GOOS, runtime.GOARCH)
-	}
-
-	command := root + "/cmd/accrual/" + binaryFile
-	cmd := exec.Command(command, "-a", gopherConfig.AccrualAddress)
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("failed start accraul service: %w", err)
-	}
-
-	return cmd, nil
 }
