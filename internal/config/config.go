@@ -13,8 +13,8 @@ const defaultMaxAccrualRequestAttempts = 5
 const defaultDelayBetweenRequestsToAccrual = 5
 
 type GophermartConfig struct {
-	Host                          string `env:"ADDRESS"`
-	DatabaseDSN                   string `env:"DATABASE_DSN"`
+	Host                          string `env:"RUN_ADDRESS"`
+	DatabaseDSN                   string `env:"DATABASE_URI"`
 	SecretKey                     string `env:"SECRET_KEY"`
 	AccrualAddress                string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	ExpTime                       uint   `env:"EXP_TIME"`
