@@ -21,8 +21,8 @@ func New(
 	r.Route("/api", func(r chi.Router) {
 		r.Group(func(r chi.Router) {
 			r.Use(gmiddleware.ShouldHasBody)
-			r.Post("/register", handler.Register(repo, gopherConfig))
-			r.Post("/login", handler.Login(repo, gopherConfig))
+			r.Post("/user/register", handler.Register(repo, gopherConfig))
+			r.Post("/user/login", handler.Login(repo, gopherConfig))
 		})
 		r.Group(func(r chi.Router) {
 			r.Use(gmiddleware.Auth(gopherConfig, repo))
