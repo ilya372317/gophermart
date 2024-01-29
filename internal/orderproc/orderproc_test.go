@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/ilya372317/gophermart/internal/accrual"
+	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/entity"
 	orderproc_mock "github.com/ilya372317/gophermart/internal/orderproc/mocks"
 	"github.com/stretchr/testify/require"
@@ -24,7 +25,7 @@ func TestOrderProcessor_UpdateStatusToProcessingReturnErr(t *testing.T) {
 	strg.EXPECT().UpdateOrderStatusByNumber(ctx, argument, entity.StatusProcessing).
 		Return(fmt.Errorf("failed update status to PROCESSING")).MinTimes(1).MaxTimes(1)
 	o := New(client, strg)
-	err := o.processOrder(ctx, argument)
+	err := o.processOrder(ctx, &config.GophermartConfig{}, argument)
 	require.Error(t, err)
 }
 
@@ -45,7 +46,7 @@ func TestOrderProcessor_SendRequestToAccrualReturnErr(t *testing.T) {
 		MinTimes(1).
 		MaxTimes(1)
 	o := New(client, strg)
-	err := o.processOrder(ctx, argument)
+	err := o.processOrder(ctx, &config.GophermartConfig{}, argument)
 	require.Error(t, err)
 }
 
@@ -99,6 +100,6 @@ func TestOrderProcessor_ProcessOrderSuccessCase(t *testing.T) {
 	}).Return(nil).MinTimes(1)
 	strg.EXPECT().UpdateOrderStatusByNumber(ctx, argument, entity.StatusProcessed).Return(nil).MinTimes(1)
 	o := New(client, strg)
-	err := o.processOrder(ctx, argument)
+	err := o.processOrder(ctx, &config.GophermartConfig{}, argument)
 	require.NoError(t, err)
 }

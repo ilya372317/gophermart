@@ -8,14 +8,12 @@ import (
 	"time"
 
 	"github.com/ilya372317/gophermart/internal/accrual"
+	"github.com/ilya372317/gophermart/internal/config"
 	"github.com/ilya372317/gophermart/internal/entity"
 	"github.com/ilya372317/gophermart/internal/logger"
 )
 
 const setInvalidStatusErrPattern = "failed set invalid status to order: %w"
-const poolSize = 30
-const secondsToWaitAnotherTry = 5
-const maxAttemptsCount = 5
 
 type OrderStorage interface {
 	UpdateOrderStatusByNumber(context.Context, int, string) error
@@ -45,8 +43,8 @@ func New(client AccrualClient, repo OrderStorage) *OrderProcessor {
 	return processor
 }
 
-func (o *OrderProcessor) Start() {
-	for i := 0; i < poolSize; i++ {
+func (o *OrderProcessor) Start(gopherConfig *config.GophermartConfig) {
+	for i := 0; i < gopherConfig.MaxOrderInProcessing; i++ {
 		go func() {
 			for {
 				task, ok := <-o.TaskCh
@@ -66,7 +64,7 @@ func (o *OrderProcessor) Start() {
 	}
 }
 
-func (o *OrderProcessor) processOrder(ctx context.Context, number int) error {
+func (o *OrderProcessor) processOrder(ctx context.Context, gopherConfig *config.GophermartConfig, number int) error {
 	err := o.Repo.UpdateOrderStatusByNumber(ctx, number, entity.StatusProcessing)
 	if err != nil {
 		return fmt.Errorf("failed update order status to PROCESSING: %w", err)
@@ -84,7 +82,7 @@ func (o *OrderProcessor) processOrder(ctx context.Context, number int) error {
 			return fmt.Errorf("failed send request to accrual: %w", err)
 		}
 		if calculationResponse.StatusCode == http.StatusTooManyRequests {
-			time.Sleep(time.Second * secondsToWaitAnotherTry)
+			time.Sleep(time.Second * time.Duration(gopherConfig.DelayBetweenRequestsToAccrual))
 			continue
 		}
 		if calculationResponse.StatusCode == http.StatusNoContent ||
@@ -106,13 +104,13 @@ func (o *OrderProcessor) processOrder(ctx context.Context, number int) error {
 			break
 		}
 		attempts++
-		if attempts >= maxAttemptsCount {
+		if attempts >= gopherConfig.MaxAccrualRequestAttempts {
 			if err := o.Repo.UpdateOrderStatusByNumber(ctx, number, entity.StatusInvalid); err != nil {
 				return fmt.Errorf(setInvalidStatusErrPattern, err)
 			}
 			return fmt.Errorf("to many attemps to get result from ")
 		}
-		time.Sleep(time.Second * secondsToWaitAnotherTry)
+		time.Sleep(time.Second * time.Duration(gopherConfig.DelayBetweenRequestsToAccrual))
 	}
 	order, err := o.Repo.GetOrderByNumber(ctx, number)
 	if err != nil {
@@ -152,9 +150,13 @@ func (o *OrderProcessor) processOrder(ctx context.Context, number int) error {
 	return nil
 }
 
-func (o *OrderProcessor) registerProcessOrderTask(ctx context.Context, number int) {
+func (o *OrderProcessor) registerProcessOrderTask(
+	ctx context.Context,
+	gopherConfig *config.GophermartConfig,
+	number int,
+) {
 	f := func() {
-		if err := o.processOrder(ctx, number); err != nil {
+		if err := o.processOrder(ctx, gopherConfig, number); err != nil {
 			logger.Log.Infof("failed process order [%d]: %v", number, err)
 			return
 		}
@@ -162,27 +164,27 @@ func (o *OrderProcessor) registerProcessOrderTask(ctx context.Context, number in
 	o.TaskCh <- f
 }
 
-func (o *OrderProcessor) SupervisingOrders(ctx context.Context) {
+func (o *OrderProcessor) SupervisingOrders(ctx context.Context, gopherConfig *config.GophermartConfig) {
 	timer := time.NewTicker(time.Second)
 	for range timer.C {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			if err := o.supervisingOrders(ctx); err != nil {
+			if err := o.supervisingOrders(ctx, gopherConfig); err != nil {
 				logger.Log.Errorf("failed get orders for processing: %v", err)
 			}
 		}
 	}
 }
 
-func (o *OrderProcessor) supervisingOrders(ctx context.Context) error {
+func (o *OrderProcessor) supervisingOrders(ctx context.Context, gopherConfig *config.GophermartConfig) error {
 	orderList, err := o.Repo.GetOrderListByStatus(ctx, entity.StatusNew)
 	if err != nil {
 		return fmt.Errorf("failed get processed orders: %w", err)
 	}
 	for _, order := range orderList {
-		o.registerProcessOrderTask(ctx, order.Number)
+		o.registerProcessOrderTask(ctx, gopherConfig, order.Number)
 	}
 
 	return nil
