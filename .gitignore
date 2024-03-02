@@ -21,3 +21,18 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+
+# Static analys
+/golangci-lint
+/storage
+
+# machinet
+machinet.conf
+
+# log
+log.txt
+
+# env
+docker/.env
+.env
+/build/gopher
