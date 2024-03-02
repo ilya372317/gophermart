@@ -35,3 +35,4 @@ log.txt
 # env
 docker/.env
 .env
+/build/gopher

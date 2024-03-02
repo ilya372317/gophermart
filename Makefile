@@ -29,3 +29,12 @@ _golangci-lint-rm-unformatted-report: _golangci-lint-format-report
 .PHONY: golangci-lint-clean
 golangci-lint-clean:
 	sudo rm -rf ./golangci-lint 
+
+.PHONY: build
+build: _create_build_dir
+	go build -o ./build/gopher ./cmd/gophermart
+	chmod +x ./build/gopher
+
+.PHONY: _create_build_dir
+_create_build_dir:
+	mkdir -p ./build
